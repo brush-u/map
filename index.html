@@ -2,11 +2,12 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>전국 실시간 캠핑장 & 글램핑 지도</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
-    body { display: flex; height: 100vh; overflow: hidden; position: relative; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body { display: flex; height: 100vh; height: 100dvh; overflow: hidden; position: relative; }
     
     /* 사이드바 스타일 */
     #sidebar { width: 380px; height: 100%; background: #ffffff; border-right: 1px solid #e1e1e1; display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 8px rgba(0,0,0,0.05); }
@@ -16,10 +17,10 @@
     
     /* 필터 및 검색창 영역 */
     .filter-box { padding: 12px 15px 6px 15px; background: #f1f3f5; }
-    .filter-box select { width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.85rem; outline: none; background: white; cursor: pointer; }
+    .filter-box select { width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 16px; outline: none; background: white; cursor: pointer; }
     
     .search-box { padding: 6px 15px 12px 15px; background: #f1f3f5; border-bottom: 1px solid #e9ecef; display: flex; gap: 6px; }
-    .search-box input { flex: 1; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.85rem; outline: none; }
+    .search-box input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 16px; outline: none; }
     .search-box button { padding: 8px 12px; background: #2c3e50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
     .search-box button:hover { background: #1a252f; }
 
@@ -71,6 +72,133 @@
     /* 스피너 */
     .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #0ca678; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 모바일 하단 탭 네비게이션 (기본은 숨김) */
+    #mobileNavBar { display: none; }
+
+    /* ===================== 모바일 세로모드 (≤768px, portrait) ===================== */
+    @media (max-width: 768px) and (orientation: portrait) {
+      body { overflow: hidden; }
+
+      /* 사이드바를 전체화면 오버레이로 전환, 기본은 숨김 상태 */
+      #sidebar {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%;
+        height: 100%;
+        height: 100dvh;
+        max-width: none;
+        z-index: 30;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        box-shadow: none;
+        padding-bottom: 64px; /* 하단 탭바 높이만큼 목록 스크롤 영역 확보 */
+      }
+      #sidebar.mobile-open { transform: translateX(0); }
+
+      .header { padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); }
+      .header h1 { font-size: 1.05rem; }
+      .header p { font-size: 0.78rem; }
+
+      /* 지도는 항상 전체 화면 */
+      #map { width: 100%; height: 100%; }
+
+      /* 카드 터치영역 확대 */
+      .card { padding: 14px; }
+      .btn-detail { padding: 9px 14px; font-size: 0.82rem; }
+
+      /* 하단 탭 네비게이션 바: 지도 / 목록 */
+      #mobileNavBar {
+        display: flex;
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        z-index: 40;
+        background: #ffffff;
+        border-top: 1px solid #e1e1e1;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      #mobileNavBar .nav-tab {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        padding: 9px 0 8px;
+        background: none;
+        border: none;
+        color: #868e96;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+      #mobileNavBar .nav-tab .nav-icon { font-size: 1.25rem; line-height: 1; }
+      #mobileNavBar .nav-tab.active { color: #2c3e50; }
+      #mobileNavBar .nav-tab:active { background: #f1f3f5; }
+
+      /* 목록 탭이 열려있을 땐 사이드바가 탭바 위로 오도록 z-index 유지, 탭바는 항상 최상단 */
+      #sidebar.mobile-open ~ #mobileNavBar { z-index: 41; }
+
+      /* 상세정보 드로어: 모바일에서는 전체화면으로 하단에서 슬라이드 업 */
+      .drawer {
+        width: 100%;
+        max-width: none;
+        right: auto;
+        left: 0;
+        top: auto;
+        bottom: 0;
+        height: 88%;
+        height: 88dvh;
+        border-radius: 16px 16px 0 0;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+        z-index: 100;
+      }
+      .drawer.open { transform: translateY(0); right: auto; }
+
+      .drawer-header { padding: 14px 16px; border-radius: 16px 16px 0 0; }
+      .drawer-header h2 { font-size: 1rem; max-width: 220px; }
+      .drawer-body { padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+      .drawer-gallery { grid-template-columns: repeat(2, 1fr); }
+      .drawer-gallery img { height: 130px; }
+
+      /* 카카오맵 인포윈도우 폭 축소 및 버튼 터치영역 확대 */
+      .info-window { width: 200px; padding: 10px; font-size: 0.8rem; }
+      .info-window .btn-detail { width: 100%; justify-content: center; padding: 10px; }
+
+      .lightbox-close { top: max(16px, env(safe-area-inset-top)); right: 18px; font-size: 1.8rem; }
+    }
+
+    /* ===================== 모바일 가로모드 (넓지만 낮은 화면) ===================== */
+    @media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+      body { overflow: hidden; }
+
+      /* 하단 탭바 대신 태블릿처럼 목록+지도를 나란히, 목록 폭만 축소 */
+      #sidebar { width: 240px; }
+      .header { padding: 10px 14px; }
+      .header h1 { font-size: 0.92rem; }
+      .header p { display: none; }
+      .filter-box, .search-box { padding: 8px 10px; }
+      .filter-box select, .search-box input { font-size: 14px; padding: 7px 8px; }
+      .status-bar { padding: 6px 12px; font-size: 0.75rem; }
+      .card { padding: 10px; }
+      .card h3 { font-size: 0.92rem; }
+
+      #mobileNavBar { display: none; }
+
+      /* 드로어는 오른쪽에서 오버레이, 폭만 축소 */
+      .drawer { width: 320px; right: -340px; }
+      .drawer.open { right: 0; }
+
+      .lightbox-close { top: 10px; right: 14px; }
+    }
+
+    /* 아주 작은 화면(≤380px, 세로) 추가 보정 */
+    @media (max-width: 380px) and (orientation: portrait) {
+      .header h1 { font-size: 0.98rem; }
+      .card h3 { font-size: 0.95rem; }
+    }
   </style>
 
   <!-- 카카오맵 API -->
@@ -119,6 +247,18 @@
 
   <div id="map"></div>
 
+  <!-- 모바일 세로모드 전용: 하단 지도/목록 탭 네비게이션 -->
+  <nav id="mobileNavBar">
+    <button class="nav-tab active" id="navTabMap" onclick="setMobileView('map')">
+      <span class="nav-icon">🗺️</span>
+      <span>지도</span>
+    </button>
+    <button class="nav-tab" id="navTabList" onclick="setMobileView('list')">
+      <span class="nav-icon">📋</span>
+      <span>목록</span>
+    </button>
+  </nav>
+
   <!-- 오른쪽 슬라이드-인 패널 (Drawer) -->
   <div class="drawer" id="drawer">
     <div class="drawer-header">
@@ -145,6 +285,19 @@
     
     let currentMarkers = [];
     let currentInfowindows = [];
+
+    const isMobilePortrait = () => window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches;
+
+    function setMobileView(view) {
+      const sidebar = document.getElementById('sidebar');
+      const navTabMap = document.getElementById('navTabMap');
+      const navTabList = document.getElementById('navTabList');
+      const showList = view === 'list';
+
+      sidebar.classList.toggle('mobile-open', showList);
+      navTabList.classList.toggle('active', showList);
+      navTabMap.classList.toggle('active', !showList);
+    }
 
     window.onload = function() {
       const container = document.getElementById('map');
@@ -343,6 +496,7 @@
           closeAllInfoWindows();
           infowindow.open(map, marker);
           map.panTo(coords);
+          if (isMobilePortrait()) setMobileView('map');
         });
 
         const card = document.createElement('div');
@@ -362,6 +516,7 @@
           infowindow.open(map, marker);
           map.setLevel(5);
           map.panTo(coords);
+          if (isMobilePortrait()) setMobileView('map');
         };
 
         listContainer.appendChild(card);
