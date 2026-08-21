@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전국 실시간 캠핑장 & 글램핑 지도</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { display: flex; height: 100vh; overflow: hidden; position: relative; }
+    
+    /* 사이드바 스타일 */
+    #sidebar { width: 380px; height: 100%; background: #ffffff; border-right: 1px solid #e1e1e1; display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 8px rgba(0,0,0,0.05); }
+    .header { padding: 20px; background: #2c3e50; color: white; }
+    .header h1 { font-size: 1.2rem; margin-bottom: 5px; }
+    .header p { font-size: 0.82rem; opacity: 0.8; }
+    
+    /* 필터 및 검색창 영역 */
+    .filter-box { padding: 12px 15px 6px 15px; background: #f1f3f5; }
+    .filter-box select { width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.85rem; outline: none; background: white; cursor: pointer; }
+    
+    .search-box { padding: 6px 15px 12px 15px; background: #f1f3f5; border-bottom: 1px solid #e9ecef; display: flex; gap: 6px; }
+    .search-box input { flex: 1; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.85rem; outline: none; }
+    .search-box button { padding: 8px 12px; background: #2c3e50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
+    .search-box button:hover { background: #1a252f; }
+
+    .status-bar { padding: 10px 20px; background: #e7f5ff; color: #1971c2; font-size: 0.85rem; font-weight: bold; border-bottom: 1px solid #d0ebff; }
+
+    .camping-list { flex: 1; overflow-y: auto; padding: 15px; }
+    .card { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 14px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s; position: relative; }
+    .card:hover { border-color: #2c3e50; background: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .card h3 { font-size: 1.02rem; color: #333; margin-bottom: 6px; }
+    .card .category { display: inline-block; background: #e7f5ff; color: #1971c2; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-bottom: 8px; }
+    .card p { font-size: 0.83rem; color: #666; margin-bottom: 4px; line-height: 1.3; }
+    .card .facilities { font-size: 0.78rem; color: #2b8a3e; margin-top: 6px; font-weight: 500; }
+    
+    .btn-detail { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; padding: 6px 12px; background: #e6fcf5; color: #0ca678; border: 1px solid #20c997; border-radius: 6px; font-size: 0.78rem; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+    .btn-detail:hover { background: #20c997; color: white; }
+
+    /* 지도 영역 */
+    #map { flex: 1; height: 100%; }
+
+    /* 인포윈도우 스타일 */
+    .info-window { padding: 12px; font-size: 0.85rem; line-height: 1.4; color: #333; width: 240px; }
+    .info-window strong { color: #2c3e50; font-size: 0.95rem; display: block; margin-bottom: 6px; }
+    .info-window .tel { color: #1971c2; font-weight: bold; font-size: 0.8rem; }
+    .info-window .info-link { display: inline-block; margin-top: 8px; color: #1971c2; font-weight: bold; font-size: 0.8rem; text-decoration: underline; }
+
+    /* 오른쪽 슬라이드-인 패널 (Drawer) 스타일 */
+    .drawer { position: fixed; top: 0; right: -420px; width: 400px; height: 100%; background: #ffffff; box-shadow: -4px 0 16px rgba(0,0,0,0.15); z-index: 100; transition: right 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; }
+    .drawer.open { right: 0; }
+
+    .drawer-header { padding: 18px 20px; background: #2c3e50; color: white; display: flex; justify-content: space-between; align-items: center; }
+    .drawer-header h2 { font-size: 1.1rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .drawer-close { font-size: 1.6rem; color: #ced4da; cursor: pointer; background: none; border: none; outline: none; }
+    .drawer-close:hover { color: white; }
+
+    .drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+    .drawer-section { margin-bottom: 20px; }
+    .drawer-section h4 { font-size: 0.9rem; color: #495057; margin-bottom: 8px; border-bottom: 2px solid #e9ecef; padding-bottom: 4px; }
+    .drawer-section p { font-size: 0.85rem; color: #666; line-height: 1.5; margin-bottom: 6px; }
+
+    .drawer-gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+    .drawer-gallery img { width: 100%; height: 110px; object-fit: cover; border-radius: 6px; border: 1px solid #e9ecef; cursor: pointer; transition: transform 0.2s; }
+    .drawer-gallery img:hover { transform: scale(1.03); }
+
+    /* 이미지 크게 보기(라이트박스) 스타일 */
+    .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; }
+    .lightbox img { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; }
+    .lightbox-close { position: absolute; top: 20px; right: 25px; color: white; font-size: 2rem; cursor: pointer; font-weight: bold; }
+
+    /* 스피너 */
+    .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #0ca678; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+  <!-- 카카오맵 API -->
+  <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d"></script>
+</head>
+<body>
+
+  <div id="sidebar">
+    <div class="header">
+      <h1>🏕️ 전국 캠핑장 실시간 검색</h1>
+      <p>한국관광공사 고캠핑 API 연동</p>
+    </div>
+    
+    <!-- 지역 선택 드롭다운 -->
+    <div class="filter-box">
+      <select id="regionSelect" onchange="searchCamping()">
+        <option value="">전체 지역 (시/도 선택)</option>
+        <option value="충청북도">충청북도</option>
+        <option value="충청남도">충청남도</option>
+        <option value="경상북도">경상북도</option>
+        <option value="경상남도">경상남도</option>
+        <option value="전라북도">전라북도</option>
+        <option value="전라남도">전라남도</option>
+        <option value="경기도">경기도</option>
+        <option value="강원도">강원도</option>
+        <option value="서울특별시">서울특별시</option>
+        <option value="인천광역시">인천광역시</option>
+        <option value="대전광역시">대전광역시</option>
+        <option value="대구광역시">대구광역시</option>
+        <option value="광주광역시">광주광역시</option>
+        <option value="부산광역시">부산광역시</option>
+        <option value="울산광역시">울산광역시</option>
+        <option value="세종특별자치시">세종특별자치시</option>
+        <option value="제주특별자치도">제주특별자치도</option>
+      </select>
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="keyword" placeholder="캠핑장 이름 또는 키워드 입력..." onkeyup="if(window.event.keyCode==13){searchCamping()}">
+      <button onclick="searchCamping()">검색</button>
+    </div>
+
+    <div class="status-bar" id="statusBar">데이터 로딩 중...</div>
+    <div class="camping-list" id="campingList"></div>
+  </div>
+
+  <div id="map"></div>
+
+  <!-- 오른쪽 슬라이드-인 패널 (Drawer) -->
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <h2 id="drawerTitle">캠핑장 상세정보</h2>
+      <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+    </div>
+    <div class="drawer-body" id="drawerBody">
+      <!-- 동적으로 내용 삽입 -->
+    </div>
+  </div>
+
+  <!-- 이미지 확대(라이트박스) 창 -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightboxImg" src="" alt="확대 이미지" onclick="event.stopPropagation()">
+  </div>
+
+  <script>
+    const API_KEY = decodeURIComponent("RNFa37b3HiqgTd2yGQM%2BQe4e7NMbUk91SA%2FcQOaulwuQN4cRn%2FDAQDE96J0g6fubhvjwKFJIAazXmYJLv7FuJQ%3D%3D");
+    
+    let map;
+    const listContainer = document.getElementById('campingList');
+    const statusBar = document.getElementById('statusBar');
+    
+    let currentMarkers = [];
+    let currentInfowindows = [];
+
+    window.onload = function() {
+      const container = document.getElementById('map');
+      const options = {
+        center: new kakao.maps.LatLng(36.3, 127.8),
+        level: 11
+      };
+      map = new kakao.maps.Map(container, options);
+
+      searchCamping();
+    };
+
+    function searchCamping() {
+      const selectedRegion = document.getElementById('regionSelect').value;
+      const keyword = document.getElementById('keyword').value.trim();
+      
+      statusBar.textContent = "데이터 검색 중...";
+
+      let url = "";
+
+      if (keyword !== "") {
+        url = `https://apis.data.go.kr/B551011/GoCamping/searchList?serviceKey=${encodeURIComponent(API_KEY)}&numOfRows=500&pageNo=1&MobileOS=ETC&MobileApp=CampingApp&_type=json&keyword=${encodeURIComponent(keyword)}`;
+      } else {
+        url = `https://apis.data.go.kr/B551011/GoCamping/basedList?serviceKey=${encodeURIComponent(API_KEY)}&numOfRows=500&pageNo=1&MobileOS=ETC&MobileApp=CampingApp&_type=json`;
+      }
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data.response && data.response.body && data.response.body.items && data.response.body.items.item) {
+            let items = data.response.body.items.item;
+            if (!Array.isArray(items)) items = [items];
+
+            if (selectedRegion !== "") {
+              items = items.filter(place => {
+                const doNm = place.doNm || "";
+                const addr1 = place.addr1 || "";
+
+                let shortRegion = "";
+                if (selectedRegion.startsWith("충청북")) shortRegion = "충북";
+                else if (selectedRegion.startsWith("충청남")) shortRegion = "충남";
+                else if (selectedRegion.startsWith("경상북")) shortRegion = "경북";
+                else if (selectedRegion.startsWith("경상남")) shortRegion = "경남";
+                else if (selectedRegion.startsWith("전라북")) shortRegion = "전북";
+                else if (selectedRegion.startsWith("전라남")) shortRegion = "전남";
+
+                return (
+                  doNm === selectedRegion || 
+                  addr1.includes(selectedRegion) || 
+                  (shortRegion !== "" && (doNm.includes(shortRegion) || addr1.includes(shortRegion)))
+                );
+              });
+            }
+
+            renderCampingList(items, `검색 결과: ${items.length}개 캠핑장`);
+          } else {
+            renderCampingList([], "검색된 캠핑장이 없습니다.");
+          }
+        })
+        .catch(error => {
+          console.error("API Fetch Error:", error);
+          statusBar.textContent = "API 연결 오류";
+        });
+    }
+
+    // 오른쪽 슬라이드-인 패널 열기 및 데이터 로드
+    function openDrawer(place) {
+      const drawer = document.getElementById('drawer');
+      const title = document.getElementById('drawerTitle');
+      const body = document.getElementById('drawerBody');
+
+      title.textContent = place.facltNm;
+      
+      const homepageUrl = place.homepage && place.homepage.startsWith("http") 
+        ? place.homepage 
+        : `https://map.kakao.com/link/search/${encodeURIComponent(place.facltNm)}`;
+
+      body.innerHTML = `
+        <div class="drawer-section">
+          <h4>📍 기본 정보</h4>
+          <p><strong>업종:</strong> ${place.induty || '정보 없음'}</p>
+          <p><strong>주소:</strong> ${place.addr1 || '정보 없음'}</p>
+          <p><strong>전화번호:</strong> ${place.tel || '정보 없음'}</p>
+          <p><strong>입지구분:</strong> ${place.lctCl || '정보 없음'}</p>
+          <p><a href="${homepageUrl}" target="_blank" style="color:#1971c2; font-weight:bold; text-decoration:underline;">🔗 홈페이지 방문하기</a></p>
+        </div>
+
+        <div class="drawer-section">
+          <h4>✨ 편의 및 부대시설</h4>
+          <p>${place.sbrsCl || '등록된 편의시설 정보가 없습니다.'}</p>
+        </div>
+
+        ${place.intro ? `
+        <div class="drawer-section">
+          <h4>📝 소개글</h4>
+          <p>${place.intro}</p>
+        </div>
+        ` : ''}
+
+        <div class="drawer-section">
+          <h4>🖼️ 갤러리 (클릭 시 확대)</h4>
+          <div id="drawerGalleryContainer">
+            <div style="text-align:center; padding:20px;">
+              <div class="spinner"></div>
+              <p style="font-size:0.8rem; color:#888; margin-top:8px;">이미지를 불러오는 중...</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      drawer.classList.add('open');
+
+      // 이미지 API 별도 조회
+      const url = `https://apis.data.go.kr/B551011/GoCamping/imageList?serviceKey=${encodeURIComponent(API_KEY)}&numOfRows=12&pageNo=1&MobileOS=ETC&MobileApp=CampingApp&_type=json&contentId=${place.contentId}`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const container = document.getElementById('drawerGalleryContainer');
+          if (data.response && data.response.body && data.response.body.items && data.response.body.items.item) {
+            let images = data.response.body.items.item;
+            if (!Array.isArray(images)) images = [images];
+
+            container.innerHTML = `
+              <div class="drawer-gallery">
+                ${images.map(img => `<img src="${img.imageUrl}" alt="갤러리 이미지" loading="lazy" onclick="openLightbox('${img.imageUrl}')" onerror="this.style.display='none'">`).join('')}
+              </div>
+            `;
+          } else {
+            container.innerHTML = '<p style="font-size:0.8rem; color:#888; text-align:center; padding:15px;">등록된 사진이 없습니다.</p>';
+          }
+        })
+        .catch(error => {
+          console.error("Drawer Image Fetch Error:", error);
+          document.getElementById('drawerGalleryContainer').innerHTML = '<p style="font-size:0.8rem; color:#e03131; text-align:center; padding:15px;">이미지를 불러오지 못했습니다.</p>';
+        });
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawer').classList.remove('open');
+    }
+
+    // 확대 모달 열기
+    function openLightbox(url) {
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightboxImg');
+      lightboxImg.src = url;
+      lightbox.style.display = 'flex';
+    }
+
+    // 확대 모달 닫기
+    function closeLightbox() {
+      document.getElementById('lightbox').style.display = 'none';
+    }
+
+    function renderCampingList(dataList, statusText) {
+      clearMap();
+      statusBar.textContent = statusText;
+
+      if (dataList.length === 0) {
+        listContainer.innerHTML = '<div style="padding:30px 15px; text-align:center; color:#888;">조건에 해당하는 캠핑장이 없습니다.</div>';
+        return;
+      }
+
+      const bounds = new kakao.maps.LatLngBounds();
+
+      dataList.forEach((place) => {
+        if (!place.mapX || !place.mapY) return;
+
+        const coords = new kakao.maps.LatLng(place.mapY, place.mapX);
+        bounds.extend(coords);
+
+        const marker = new kakao.maps.Marker({
+          map: map,
+          position: coords
+        });
+        currentMarkers.push(marker);
+
+        const infowindow = new kakao.maps.InfoWindow({
+          content: `
+            <div class="info-window">
+              <strong>${place.facltNm}</strong>
+              <span style="color:#1971c2; font-size:0.75rem;">🏷️ ${place.induty || '캠핑장'}</span><br/>
+              <small style="color:#666;">📍 ${place.addr1 || '주소 정보 없음'}</small><br/>
+              <span class="tel">📞 ${place.tel || '전화번호 미등록'}</span><br/>
+              <button class="btn-detail" onclick="openDrawerFromMap('${place.contentId}')">📷 상세정보 & 사진 보기</button>
+            </div>
+          `
+        });
+        currentInfowindows.push(infowindow);
+
+        // 지도 전용 임시 데이터 보관용
+        window[`place_${place.contentId}`] = place;
+
+        kakao.maps.event.addListener(marker, 'click', () => {
+          closeAllInfoWindows();
+          infowindow.open(map, marker);
+          map.panTo(coords);
+        });
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <span class="category">${place.induty || '일반야영장'}</span>
+          <h3>${place.facltNm}</h3>
+          <p><strong>주소:</strong> ${place.addr1 || '정보 없음'}</p>
+          <p><strong>전화:</strong> ${place.tel || '정보 없음'}</p>
+          <p class="facilities">✨ ${place.sbrsCl || '편의시설 정보 없음'}</p>
+          
+          <button class="btn-detail" onclick="event.stopPropagation(); openDrawer(window['place_${place.contentId}'])">📷 상세정보 & 사진</button>
+        `;
+
+        card.onclick = () => {
+          closeAllInfoWindows();
+          infowindow.open(map, marker);
+          map.setLevel(5);
+          map.panTo(coords);
+        };
+
+        listContainer.appendChild(card);
+      });
+
+      if (dataList.length > 0) {
+        map.setBounds(bounds);
+      }
+    }
+
+    function openDrawerFromMap(contentId) {
+      if (window[`place_${contentId}`]) {
+        openDrawer(window[`place_${contentId}`]);
+      }
+    }
+
+    function clearMap() {
+      currentMarkers.forEach(marker => marker.setMap(null));
+      currentMarkers = [];
+      closeAllInfoWindows();
+      currentInfowindows = [];
+      listContainer.innerHTML = '';
+      closeDrawer();
+    }
+
+    function closeAllInfoWindows() {
+      currentInfowindows.forEach(iw => iw.close());
+    }
+  </script>
+</body>
+</html>
