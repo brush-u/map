@@ -7,67 +7,68 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; }
+    html { font-size: 19px; }
     body { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; background: #f8f9fa; }
     button { font-family: inherit; }
 
     /* ===================== 상단 헤더 + 탭 ===================== */
     .topbar { flex-shrink: 0; background: #2c3e50; color: #fff; padding-top: env(safe-area-inset-top); }
     .topbar-inner { padding: 14px 16px 10px; }
-    .topbar-inner h1 { font-size: 1.05rem; margin-bottom: 2px; }
-    .topbar-inner p { font-size: 0.74rem; opacity: 0.75; }
+    .topbar-inner h1 { font-size: 1.15rem; margin-bottom: 3px; }
+    .topbar-inner p { font-size: 0.82rem; opacity: 0.8; }
 
     .view-tabs { display: flex; background: #1a252f; }
-    .view-tab { flex: 1; padding: 12px 0; background: none; border: none; color: #9aa7b0; font-size: 0.88rem; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .view-tab { flex: 1; padding: 12px 0; background: none; border: none; color: #9aa7b0; font-size: 0.95rem; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; display: flex; align-items: center; justify-content: center; gap: 6px; }
     .view-tab.active { color: #ffffff; border-bottom-color: #20c997; background: rgba(255,255,255,0.04); }
     .view-tab:active { background: rgba(255,255,255,0.08); }
 
     /* ===================== 필터 패널 ===================== */
     .filter-panel { flex-shrink: 0; background: #ffffff; border-bottom: 1px solid #e9ecef; }
-    .filter-toggle { width: 100%; padding: 11px 16px; background: #f1f3f5; border: none; text-align: left; font-size: 0.85rem; font-weight: bold; color: #495057; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-    .filter-toggle .count-badge { background: #20c997; color: #fff; font-size: 0.7rem; padding: 1px 7px; border-radius: 10px; margin-left: 6px; }
+    .filter-toggle { width: 100%; padding: 11px 16px; background: #f1f3f5; border: none; text-align: left; font-size: 0.92rem; font-weight: bold; color: #495057; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .filter-toggle .count-badge { background: #20c997; color: #fff; font-size: 0.76rem; padding: 1px 7px; border-radius: 10px; margin-left: 6px; }
     .filter-body { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
-    .filter-body.open { max-height: 900px; overflow-y: auto; }
+    .filter-body.open { max-height: 1000px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
     .filter-body-inner { padding: 14px 16px 16px; }
 
     .filter-group { margin-bottom: 14px; }
-    .filter-group h4 { font-size: 0.78rem; color: #868e96; margin-bottom: 8px; font-weight: bold; letter-spacing: 0.02em; }
+    .filter-group h4 { font-size: 0.85rem; color: #868e96; margin-bottom: 8px; font-weight: bold; letter-spacing: 0.02em; }
 
     .chip-group { display: flex; flex-wrap: wrap; gap: 7px; }
-    .chip { padding: 7px 13px; border-radius: 999px; border: 1px solid #ced4da; background: #fff; color: #495057; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+    .chip { padding: 7px 13px; border-radius: 999px; border: 1px solid #ced4da; background: #fff; color: #495057; font-size: 0.86rem; cursor: pointer; white-space: nowrap; }
     .chip.active { background: #2c3e50; border-color: #2c3e50; color: #fff; }
     .chip:active { opacity: 0.8; }
 
     .filter-search-row { display: flex; gap: 6px; }
-    .filter-search-row input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 16px; outline: none; }
+    .filter-search-row input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 17px; outline: none; }
 
-    .btn-apply { width: 100%; margin-top: 4px; padding: 12px; background: #20c997; color: #fff; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
+    .btn-apply { width: 100%; margin-top: 4px; padding: 12px; background: #20c997; color: #fff; border: none; border-radius: 6px; font-size: 0.98rem; font-weight: bold; cursor: pointer; }
     .btn-apply:active { background: #0ca678; }
 
     /* ===================== 상태바 ===================== */
-    .status-bar { flex-shrink: 0; padding: 9px 16px; background: #e7f5ff; color: #1971c2; font-size: 0.8rem; font-weight: bold; border-bottom: 1px solid #d0ebff; }
+    .status-bar { flex-shrink: 0; padding: 9px 16px; background: #e7f5ff; color: #1971c2; font-size: 0.88rem; font-weight: bold; border-bottom: 1px solid #d0ebff; }
 
     /* ===================== 뷰 전환 영역 (목록 / 지도) ===================== */
     .view-content { position: relative; flex: 1; min-height: 0; }
-    .view-pane { position: absolute; inset: 0; }
+    .view-pane { position: absolute; inset: 0; width: 100%; height: 100%; }
     .view-pane:not(.active) { visibility: hidden; pointer-events: none; z-index: 0; }
     .view-pane.active { visibility: visible; z-index: 1; }
 
     /* ---- 목록 뷰 ---- */
-    #listView { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; }
+    #listView { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; padding: 14px; }
     .card { background: #ffffff; border: 1px solid #e9ecef; border-radius: 10px; padding: 14px; margin-bottom: 12px; cursor: pointer; transition: all 0.15s; }
     .card:active { background: #f8f9fa; }
     .card-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
-    .card .category { display: inline-block; background: #e7f5ff; color: #1971c2; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
-    .card .distance-badge { display: inline-block; background: #fff3bf; color: #e8590c; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
-    .card h3 { font-size: 1.02rem; color: #212529; margin-bottom: 6px; }
+    .card .category { display: inline-block; background: #e7f5ff; color: #1971c2; font-size: 0.8rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+    .card .distance-badge { display: inline-block; background: #fff3bf; color: #e8590c; font-size: 0.8rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+    .card h3 { font-size: 1.12rem; color: #212529; margin-bottom: 6px; }
     .card h3 a { color: #212529; text-decoration: none; }
     .card h3 a:active { color: #1971c2; }
-    .card h3 .link-icon { font-size: 0.7em; color: #1971c2; margin-left: 2px; }
-    .card p { font-size: 0.82rem; color: #666; margin-bottom: 4px; line-height: 1.35; }
-    .card .facilities { font-size: 0.78rem; color: #2b8a3e; margin-top: 6px; font-weight: 500; }
-    .btn-detail { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; padding: 8px 14px; background: #e6fcf5; color: #0ca678; border: 1px solid #20c997; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+    .card h3 .link-icon { font-size: 0.75em; color: #1971c2; margin-left: 2px; }
+    .card p { font-size: 0.9rem; color: #666; margin-bottom: 4px; line-height: 1.4; }
+    .card .facilities { font-size: 0.86rem; color: #2b8a3e; margin-top: 6px; font-weight: 500; }
+    .btn-detail { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; padding: 8px 14px; background: #e6fcf5; color: #0ca678; border: 1px solid #20c997; border-radius: 6px; font-size: 0.88rem; font-weight: bold; cursor: pointer; }
     .btn-detail:active { background: #20c997; color: white; }
-    .empty-state { padding: 40px 15px; text-align: center; color: #888; font-size: 0.88rem; }
+    .empty-state { padding: 40px 15px; text-align: center; color: #888; font-size: 0.95rem; }
 
     /* ---- 지도 뷰 ---- */
     #mapView #map { width: 100%; height: 100%; }
@@ -75,11 +76,11 @@
     #locateBtn:active { background: #f1f3f5; }
     #locateBtn.locating { animation: spin 1s linear infinite; }
 
-    .info-window { padding: 12px; font-size: 0.85rem; line-height: 1.4; color: #333; width: 220px; }
-    .info-window .iw-title { color: #2c3e50; font-size: 0.95rem; font-weight: bold; display: block; margin-bottom: 6px; text-decoration: none; }
+    .info-window { padding: 12px; font-size: 0.92rem; line-height: 1.45; color: #333; width: 230px; }
+    .info-window .iw-title { color: #2c3e50; font-size: 1.02rem; font-weight: bold; display: block; margin-bottom: 6px; text-decoration: none; }
     .info-window .iw-title .link-icon { font-size: 0.8em; color: #1971c2; }
-    .info-window .distance { color: #e8590c; font-weight: bold; font-size: 0.78rem; }
-    .info-window .tel { color: #1971c2; font-weight: bold; font-size: 0.8rem; }
+    .info-window .distance { color: #e8590c; font-weight: bold; font-size: 0.85rem; }
+    .info-window .tel { color: #1971c2; font-weight: bold; font-size: 0.88rem; }
 
     /* ===================== 오른쪽/하단 상세정보 드로어 ===================== */
     .drawer-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 99; }
@@ -87,20 +88,44 @@
     .drawer { position: fixed; top: 0; right: -420px; width: 400px; height: 100%; background: #ffffff; box-shadow: -4px 0 16px rgba(0,0,0,0.15); z-index: 100; transition: right 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; }
     .drawer.open { right: 0; }
     .drawer-header { padding: 18px 20px; background: #2c3e50; color: white; display: flex; justify-content: space-between; align-items: center; }
-    .drawer-header h2 { font-size: 1.1rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .drawer-close { font-size: 1.6rem; color: #ced4da; cursor: pointer; background: none; border: none; outline: none; }
+    .drawer-header h2 { font-size: 1.18rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .drawer-close { font-size: 1.7rem; color: #ced4da; cursor: pointer; background: none; border: none; outline: none; }
     .drawer-close:hover { color: white; }
-    .drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+    .drawer-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; padding: 20px; }
     .drawer-section { margin-bottom: 20px; }
-    .drawer-section h4 { font-size: 0.9rem; color: #495057; margin-bottom: 8px; border-bottom: 2px solid #e9ecef; padding-bottom: 4px; }
-    .drawer-section p { font-size: 0.85rem; color: #666; line-height: 1.5; margin-bottom: 6px; }
+    .drawer-section h4 { font-size: 0.98rem; color: #495057; margin-bottom: 8px; border-bottom: 2px solid #e9ecef; padding-bottom: 4px; }
+    .drawer-section p { font-size: 0.92rem; color: #666; line-height: 1.55; margin-bottom: 6px; }
     .drawer-gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
     .drawer-gallery img { width: 100%; height: 110px; object-fit: cover; border-radius: 6px; border: 1px solid #e9ecef; cursor: pointer; }
 
-    /* ===================== 라이트박스 ===================== */
-    .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; }
-    .lightbox img { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; }
-    .lightbox-close { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 25px; color: white; font-size: 2rem; cursor: pointer; font-weight: bold; }
+    .map-link-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .map-link-btn { display: inline-flex; align-items: center; gap: 5px; padding: 8px 12px; border-radius: 6px; font-size: 0.86rem; font-weight: bold; text-decoration: none; border: 1px solid #ced4da; color: #333; }
+    .map-link-btn.kakao { background: #fee500; border-color: #fee500; color: #3c1e1e; }
+    .map-link-btn.naver { background: #03c75a; border-color: #03c75a; color: #fff; }
+
+    .nearby-group { margin-bottom: 12px; }
+    .nearby-group h5 { font-size: 0.86rem; color: #495057; margin-bottom: 6px; }
+    .nearby-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f3f5; font-size: 0.9rem; }
+    .nearby-item:last-child { border-bottom: none; }
+    .nearby-item .nearby-name { color: #333; font-weight: 500; }
+    .nearby-item .nearby-dist { color: #868e96; font-size: 0.82rem; white-space: nowrap; margin-left: 8px; }
+    .nearby-item a { color: #1971c2; font-size: 0.82rem; font-weight: bold; text-decoration: none; margin-left: 8px; white-space: nowrap; }
+    .nearby-empty { color: #adb5bd; font-size: 0.85rem; padding: 4px 0; }
+
+    /* ===================== 라이트박스(스와이프 갤러리) ===================== */
+    .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 2000; opacity: 0; transition: opacity 0.25s ease; }
+    .lightbox.open { display: block; opacity: 1; }
+    .lightbox-track { display: flex; width: 100%; height: 100%; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); touch-action: pan-y; }
+    .lightbox-track.dragging { transition: none; }
+    .lightbox-slide { flex: 0 0 100%; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 40px 16px; }
+    .lightbox-slide img { max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; -webkit-user-drag: none; user-select: none; }
+    .lightbox-close { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; color: white; font-size: 2rem; cursor: pointer; font-weight: bold; z-index: 2; background: rgba(0,0,0,0.3); width: 40px; height: 40px; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; line-height: 1; }
+    .lightbox-counter { position: absolute; top: max(28px, calc(env(safe-area-inset-top) + 8px)); left: 50%; transform: translateX(-50%); color: white; font-size: 0.92rem; font-weight: bold; background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 999px; z-index: 2; }
+    .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.35); border: none; color: #fff; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
+    .lightbox-nav.prev { left: 12px; }
+    .lightbox-nav.next { right: 12px; }
+    .lightbox-nav:disabled { opacity: 0.25; pointer-events: none; }
+    @media (max-width: 768px) { .lightbox-nav { display: none; } /* 모바일은 스와이프로만 이동 */ }
 
     .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #0ca678; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -129,7 +154,7 @@
   </style>
 
   <!-- 카카오맵 API -->
-  <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d"></script>
+  <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=services"></script>
 </head>
 <body>
 
@@ -201,10 +226,13 @@
     <div class="drawer-body" id="drawerBody"></div>
   </div>
 
-  <!-- 라이트박스 -->
-  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
-    <span class="lightbox-close">&times;</span>
-    <img id="lightboxImg" src="" alt="확대 이미지" onclick="event.stopPropagation()">
+  <!-- 라이트박스(스와이프 갤러리) -->
+  <div class="lightbox" id="lightbox">
+    <span class="lightbox-counter" id="lightboxCounter"></span>
+    <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+    <button class="lightbox-nav prev" id="lightboxPrev" onclick="lightboxStep(-1)">‹</button>
+    <button class="lightbox-nav next" id="lightboxNext" onclick="lightboxStep(1)">›</button>
+    <div class="lightbox-track" id="lightboxTrack"></div>
   </div>
 
   <script>
@@ -559,8 +587,6 @@
       });
     }
 
-    // ---------- 목록 렌더링 ----------
-
     function renderAll(dataList, statusText, options = {}) {
       statusBar.textContent = statusText;
       dataList.forEach(place => { window[`place_${place.contentId}`] = place; });
@@ -568,8 +594,18 @@
       renderMarkers(dataList, options);
     }
 
+    // ---------- 목록 렌더링 (무한 스크롤) ----------
+
+    let currentDataList = [];
+    let renderedCount = 0;
+    let listObserver = null;
+    const RENDER_BATCH = 40;
+
     function renderList(dataList) {
       closeDrawer();
+      if (listObserver) { listObserver.disconnect(); listObserver = null; }
+      currentDataList = dataList;
+      renderedCount = 0;
       listContainer.innerHTML = '';
 
       if (dataList.length === 0) {
@@ -577,34 +613,69 @@
         return;
       }
 
-      dataList.forEach((place) => {
-        const homepageUrl = getHomepageUrl(place);
-        const distanceBadge = Number.isFinite(place._distanceKm)
-          ? `<span class="distance-badge">📍 ${place._distanceKm.toFixed(1)}km</span>` : '';
+      renderNextBatch();
 
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div class="card-badges">
-            <span class="category">${place.induty || '일반야영장'}</span>${distanceBadge}
-          </div>
-          <h3><a href="${homepageUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${place.facltNm} <span class="link-icon">🔗</span></a></h3>
-          <p><strong>주소:</strong> ${place.addr1 || '정보 없음'}</p>
-          <p><strong>전화:</strong> ${place.tel || '정보 없음'}</p>
-          <p class="facilities">✨ ${place.sbrsCl || '편의시설 정보 없음'}</p>
-          <button class="btn-detail" onclick="event.stopPropagation(); openDrawerFromMap('${place.contentId}')">📷 상세정보 & 사진</button>
-        `;
-        card.onclick = () => {
-          setView('map');
-          if (place.mapX && place.mapY) {
-            const coords = new kakao.maps.LatLng(place.mapY, place.mapX);
-            map.setLevel(5);
-            map.panTo(coords);
-            openInfowindowFor(place.contentId);
+      // iOS Safari/Chrome(WebKit): 콘텐츠를 통째로 교체한 뒤 스크롤이 먹통이 되는 경우가 있어
+      // 강제로 리플로우를 한 번 유도해준다.
+      listContainer.style.overflow = 'hidden';
+      requestAnimationFrame(() => { listContainer.style.overflow = 'auto'; });
+    }
+
+    function renderNextBatch() {
+      const oldSentinel = document.getElementById('listSentinel');
+      if (oldSentinel) oldSentinel.remove();
+
+      const fragment = document.createDocumentFragment();
+      const end = Math.min(renderedCount + RENDER_BATCH, currentDataList.length);
+      for (let i = renderedCount; i < end; i++) {
+        fragment.appendChild(buildCard(currentDataList[i]));
+      }
+      listContainer.appendChild(fragment);
+      renderedCount = end;
+
+      if (renderedCount < currentDataList.length) {
+        const sentinel = document.createElement('div');
+        sentinel.id = 'listSentinel';
+        sentinel.style.cssText = 'height:1px; grid-column: 1 / -1;';
+        listContainer.appendChild(sentinel);
+
+        listObserver = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            listObserver.disconnect();
+            renderNextBatch();
           }
-        };
-        listContainer.appendChild(card);
-      });
+        }, { root: listContainer, rootMargin: '600px' });
+        listObserver.observe(sentinel);
+      }
+    }
+
+    function buildCard(place) {
+      const homepageUrl = getHomepageUrl(place);
+      const distanceBadge = Number.isFinite(place._distanceKm)
+        ? `<span class="distance-badge">📍 ${place._distanceKm.toFixed(1)}km</span>` : '';
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-badges">
+          <span class="category">${place.induty || '일반야영장'}</span>${distanceBadge}
+        </div>
+        <h3><a href="${homepageUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${place.facltNm} <span class="link-icon">🔗</span></a></h3>
+        <p><strong>주소:</strong> ${place.addr1 || '정보 없음'}</p>
+        <p><strong>전화:</strong> ${place.tel || '정보 없음'}</p>
+        <p class="facilities">✨ ${place.sbrsCl || '편의시설 정보 없음'}</p>
+        <button class="btn-detail" onclick="event.stopPropagation(); openDrawerFromMap('${place.contentId}')">📷 상세정보 & 사진</button>
+      `;
+      card.onclick = () => {
+        setView('map');
+        if (place.mapX && place.mapY) {
+          const coords = new kakao.maps.LatLng(place.mapY, place.mapX);
+          map.setLevel(5);
+          map.panTo(coords);
+          openInfowindowFor(place.contentId);
+        }
+      };
+      return card;
     }
 
     // ---------- 지도 렌더링 ----------
@@ -614,35 +685,46 @@
 
       clearMarkers();
 
+      const validPlaces = dataList.filter(p => p.mapX && p.mapY);
+      if (validPlaces.length === 0) return;
+
       const bounds = new kakao.maps.LatLngBounds();
-      let hasPoint = false;
+      const fitBounds = options.fitBounds !== false;
+      const MARKER_CHUNK = 300;
+      let idx = 0;
 
-      dataList.forEach((place) => {
-        if (!place.mapX || !place.mapY) return;
-        const coords = new kakao.maps.LatLng(place.mapY, place.mapX);
-        bounds.extend(coords);
-        hasPoint = true;
+      function addChunk() {
+        const end = Math.min(idx + MARKER_CHUNK, validPlaces.length);
+        for (; idx < end; idx++) {
+          const place = validPlaces[idx];
+          const coords = new kakao.maps.LatLng(place.mapY, place.mapX);
+          bounds.extend(coords);
 
-        // 인포윈도우는 마커마다 미리 만들지 않고, 클릭 시 공용 인포윈도우 하나에 내용을 채워 연다.
-        // (데이터가 수천 건일 수 있어 마커 자체를 가볍게 유지하기 위함)
-        const marker = new kakao.maps.Marker({ map: map, position: coords });
-        marker.__contentId = place.contentId;
-        currentMarkers.push(marker);
+          // 인포윈도우는 마커마다 미리 만들지 않고, 클릭 시 공용 인포윈도우 하나에 내용을 채워 연다.
+          // (데이터가 수천 건일 수 있어 마커 자체를 가볍게 유지하기 위함)
+          const marker = new kakao.maps.Marker({ map: map, position: coords });
+          marker.__contentId = place.contentId;
+          currentMarkers.push(marker);
 
-        window[`place_${place.contentId}`] = place;
+          window[`place_${place.contentId}`] = place;
 
-        kakao.maps.event.addListener(marker, 'click', () => {
-          map.panTo(coords);
-          openMarkerInfo(place.contentId);
-        });
-      });
+          kakao.maps.event.addListener(marker, 'click', () => {
+            map.panTo(coords);
+            openMarkerInfo(place.contentId);
+          });
+        }
 
-      // 필터 검색 등으로 결과가 바뀐 경우엔 결과가 한눈에 보이도록 지도 범위를 재조정한다.
-      // (내 위치 버튼 등에서는 fitBounds:false로 호출해 위치 중심 뷰를 유지한다)
-      if (options.fitBounds !== false && hasPoint) {
-        if (userLat != null) bounds.extend(new kakao.maps.LatLng(userLat, userLng));
-        map.setBounds(bounds);
+        if (idx < validPlaces.length) {
+          requestAnimationFrame(addChunk);
+        } else if (fitBounds) {
+          // 필터 검색 등으로 결과가 바뀐 경우엔 결과가 한눈에 보이도록 지도 범위를 재조정한다.
+          // (내 위치 버튼 등에서는 fitBounds:false로 호출해 위치 중심 뷰를 유지한다)
+          if (userLat != null) bounds.extend(new kakao.maps.LatLng(userLat, userLng));
+          map.setBounds(bounds);
+        }
       }
+
+      addChunk();
     }
 
     let sharedInfowindow = null;
@@ -655,7 +737,7 @@
       return `
         <div class="info-window">
           <a class="iw-title" href="${homepageUrl}" target="_blank" rel="noopener">${place.facltNm} <span class="link-icon">🔗</span></a>
-          <span style="color:#1971c2; font-size:0.75rem;">🏷️ ${place.induty || '캠핑장'}</span><br/>
+          <span style="color:#1971c2; font-size:0.82rem;">🏷️ ${place.induty || '캠핑장'}</span><br/>
           ${distanceLine}
           <small style="color:#666;">📍 ${place.addr1 || '주소 정보 없음'}</small><br/>
           <span class="tel">📞 ${place.tel || '전화번호 미등록'}</span><br/>
@@ -701,6 +783,15 @@
 
       title.textContent = place.facltNm;
       const homepageUrl = getHomepageUrl(place);
+      const hasCoords = !!(place.mapX && place.mapY);
+
+      const kakaoDirectionsUrl = hasCoords
+        ? `https://map.kakao.com/link/to/${encodeURIComponent(place.facltNm)},${place.mapY},${place.mapX}`
+        : null;
+      const kakaoViewUrl = hasCoords
+        ? `https://map.kakao.com/link/map/${encodeURIComponent(place.facltNm)},${place.mapY},${place.mapX}`
+        : null;
+      const naverSearchUrl = `https://map.naver.com/p/search/${encodeURIComponent(place.facltNm)}`;
 
       body.innerHTML = `
         <div class="drawer-section">
@@ -711,6 +802,11 @@
           <p><strong>입지구분:</strong> ${place.lctCl || '정보 없음'}</p>
           ${Number.isFinite(place._distanceKm) ? `<p><strong>내 위치에서:</strong> 약 ${place._distanceKm.toFixed(1)}km</p>` : ''}
           <p><a href="${homepageUrl}" target="_blank" rel="noopener" style="color:#1971c2; font-weight:bold; text-decoration:underline;">🔗 홈페이지 방문하기</a></p>
+          <div class="map-link-row">
+            ${kakaoDirectionsUrl ? `<a class="map-link-btn kakao" href="${kakaoDirectionsUrl}" target="_blank" rel="noopener">🧭 카카오맵 길찾기</a>` : ''}
+            ${kakaoViewUrl ? `<a class="map-link-btn" href="${kakaoViewUrl}" target="_blank" rel="noopener">🗺️ 카카오맵에서 보기</a>` : ''}
+            <a class="map-link-btn naver" href="${naverSearchUrl}" target="_blank" rel="noopener">🟢 네이버지도에서 보기</a>
+          </div>
         </div>
         <div class="drawer-section">
           <h4>✨ 편의 및 부대시설</h4>
@@ -718,7 +814,15 @@
         </div>
         ${place.intro ? `<div class="drawer-section"><h4>📝 소개글</h4><p>${place.intro}</p></div>` : ''}
         <div class="drawer-section">
-          <h4>🖼️ 갤러리 (클릭 시 확대)</h4>
+          <h4>🛒 주변 편의시설</h4>
+          <div id="nearbyContainer">
+            ${hasCoords
+              ? `<div style="text-align:center; padding:16px;"><div class="spinner"></div><p style="font-size:0.8rem; color:#888; margin-top:8px;">주변 편의점·마트·정육점을 찾는 중...</p></div>`
+              : `<p class="nearby-empty">좌표 정보가 없어 주변 시설을 찾을 수 없습니다.</p>`}
+          </div>
+        </div>
+        <div class="drawer-section">
+          <h4>🖼️ 갤러리 (클릭 시 확대 · 스와이프로 넘기기)</h4>
           <div id="drawerGalleryContainer">
             <div style="text-align:center; padding:20px;">
               <div class="spinner"></div>
@@ -737,6 +841,8 @@
         drawerHistoryPushed = true;
       }
 
+      if (hasCoords) loadNearbyAmenities(place);
+
       const url = `https://apis.data.go.kr/B551011/GoCamping/imageList?serviceKey=${encodeURIComponent(API_KEY)}&numOfRows=12&pageNo=1&MobileOS=ETC&MobileApp=CampingApp&_type=json&contentId=${place.contentId}`;
 
       fetch(url)
@@ -746,9 +852,11 @@
           if (data.response && data.response.body && data.response.body.items && data.response.body.items.item) {
             let images = data.response.body.items.item;
             if (!Array.isArray(images)) images = [images];
+            const urls = images.map(img => img.imageUrl);
+            currentGalleryImages = urls;
             container.innerHTML = `
               <div class="drawer-gallery">
-                ${images.map(img => `<img src="${img.imageUrl}" alt="갤러리 이미지" loading="lazy" onclick="openLightbox('${img.imageUrl}')" onerror="this.style.display='none'">`).join('')}
+                ${urls.map((u, i) => `<img src="${u}" alt="갤러리 이미지" loading="lazy" onclick="openLightbox(currentGalleryImages, ${i})" onerror="this.style.display='none'">`).join('')}
               </div>
             `;
           } else {
@@ -761,6 +869,68 @@
         });
     }
 
+    // ---------- 주변 편의시설 (카카오 로컬 검색) ----------
+
+    function searchNearbyPlaces(options, coords) {
+      return new Promise((resolve) => {
+        if (!window.kakao || !kakao.maps.services) { resolve([]); return; }
+        const places = new kakao.maps.services.Places();
+        const searchOptions = { location: coords, radius: options.radius, sort: kakao.maps.services.SortBy.DISTANCE };
+        const callback = (result, status) => {
+          resolve(status === kakao.maps.services.Status.OK ? result.slice(0, options.limit) : []);
+        };
+        if (options.category) {
+          places.categorySearch(options.category, callback, searchOptions);
+        } else {
+          places.keywordSearch(options.keyword, callback, searchOptions);
+        }
+      });
+    }
+
+    function formatDistance(meters) {
+      const m = parseInt(meters, 10);
+      if (!m) return '';
+      return m >= 1000 ? `${(m / 1000).toFixed(1)}km` : `${m}m`;
+    }
+
+    function renderNearbyGroup(label, items) {
+      if (!items || items.length === 0) {
+        return `<div class="nearby-group"><h5>${label}</h5><p class="nearby-empty">근처에 검색된 곳이 없습니다.</p></div>`;
+      }
+      return `
+        <div class="nearby-group">
+          <h5>${label}</h5>
+          ${items.map(item => `
+            <div class="nearby-item">
+              <span class="nearby-name">${item.place_name}</span>
+              <span class="nearby-dist">${formatDistance(item.distance)}</span>
+              <a href="https://map.kakao.com/link/to/${encodeURIComponent(item.place_name)},${item.y},${item.x}" target="_blank" rel="noopener">길찾기</a>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function loadNearbyAmenities(place) {
+      const coords = new kakao.maps.LatLng(place.mapY, place.mapX);
+
+      Promise.all([
+        searchNearbyPlaces({ category: 'CS2', radius: 2000, limit: 3 }, coords),
+        searchNearbyPlaces({ category: 'MT1', radius: 5000, limit: 3 }, coords),
+        searchNearbyPlaces({ keyword: '정육점', radius: 5000, limit: 3 }, coords)
+      ]).then(([convenience, marts, butchers]) => {
+        const container = document.getElementById('nearbyContainer');
+        if (!container) return; // 드로어가 이미 닫혔을 수 있음
+        container.innerHTML =
+          renderNearbyGroup('🏪 편의점', convenience) +
+          renderNearbyGroup('🛒 마트', marts) +
+          renderNearbyGroup('🥩 정육점', butchers);
+      }).catch(() => {
+        const container = document.getElementById('nearbyContainer');
+        if (container) container.innerHTML = '<p class="nearby-empty">주변 시설 정보를 불러오지 못했습니다.</p>';
+      });
+    }
+
     function closeDrawer() {
       document.getElementById('drawer').classList.remove('open');
       document.getElementById('drawerBackdrop').classList.remove('open');
@@ -771,7 +941,12 @@
     }
 
     window.addEventListener('popstate', () => {
-      // 뒤로가기 버튼/제스처로 진입한 경우: 드로어가 열려있었다면 페이지 이동 없이 닫기만 한다
+      // 뒤로가기 버튼/제스처로 진입한 경우: 열려있는 오버레이를 페이지 이동 없이 닫기만 한다
+      if (document.getElementById('lightbox').classList.contains('open')) {
+        lightboxHistoryPushed = false;
+        document.getElementById('lightbox').classList.remove('open');
+        return;
+      }
       if (document.getElementById('drawer').classList.contains('open')) {
         drawerHistoryPushed = false;
         document.getElementById('drawer').classList.remove('open');
@@ -779,14 +954,96 @@
       }
     });
 
-    function openLightbox(url) {
-      document.getElementById('lightboxImg').src = url;
-      document.getElementById('lightbox').style.display = 'flex';
+    // ---------- 라이트박스(스와이프 갤러리) ----------
+
+    let currentGalleryImages = [];
+    let lightboxImages = [];
+    let lightboxIndex = 0;
+    let lightboxHistoryPushed = false;
+    let touchStartX = null;
+    let touchDeltaX = 0;
+
+    function openLightbox(images, index) {
+      lightboxImages = images;
+      lightboxIndex = index;
+
+      const track = document.getElementById('lightboxTrack');
+      track.innerHTML = lightboxImages.map(u => `
+        <div class="lightbox-slide"><img src="${u}" alt="확대 이미지"></div>
+      `).join('');
+      track.style.transform = `translateX(${-lightboxIndex * 100}%)`;
+
+      updateLightboxChrome();
+
+      const lightbox = document.getElementById('lightbox');
+      lightbox.classList.add('open');
+
+      if (!lightboxHistoryPushed) {
+        history.pushState({ lightboxOpen: true }, '');
+        lightboxHistoryPushed = true;
+      }
+    }
+
+    function updateLightboxChrome() {
+      document.getElementById('lightboxCounter').textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+      document.getElementById('lightboxPrev').disabled = lightboxIndex <= 0;
+      document.getElementById('lightboxNext').disabled = lightboxIndex >= lightboxImages.length - 1;
+    }
+
+    function lightboxStep(dir) {
+      const next = lightboxIndex + dir;
+      if (next < 0 || next > lightboxImages.length - 1) return;
+      lightboxIndex = next;
+      const track = document.getElementById('lightboxTrack');
+      track.style.transform = `translateX(${-lightboxIndex * 100}%)`;
+      updateLightboxChrome();
     }
 
     function closeLightbox() {
-      document.getElementById('lightbox').style.display = 'none';
+      const lightbox = document.getElementById('lightbox');
+      if (!lightbox.classList.contains('open')) return;
+      lightbox.classList.remove('open');
+      if (lightboxHistoryPushed) {
+        lightboxHistoryPushed = false;
+        history.back();
+      }
     }
+
+    // 스와이프 제스처
+    const lightboxTrackEl = document.getElementById('lightboxTrack');
+    lightboxTrackEl.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchDeltaX = 0;
+      lightboxTrackEl.classList.add('dragging');
+    }, { passive: true });
+
+    lightboxTrackEl.addEventListener('touchmove', (e) => {
+      if (touchStartX == null) return;
+      touchDeltaX = e.touches[0].clientX - touchStartX;
+      const percent = (-lightboxIndex * 100) + (touchDeltaX / window.innerWidth * 100);
+      lightboxTrackEl.style.transform = `translateX(${percent}%)`;
+    }, { passive: true });
+
+    lightboxTrackEl.addEventListener('touchend', () => {
+      lightboxTrackEl.classList.remove('dragging');
+      const threshold = window.innerWidth * 0.18;
+      if (touchDeltaX > threshold && lightboxIndex > 0) {
+        lightboxStep(-1);
+      } else if (touchDeltaX < -threshold && lightboxIndex < lightboxImages.length - 1) {
+        lightboxStep(1);
+      } else {
+        lightboxTrackEl.style.transform = `translateX(${-lightboxIndex * 100}%)`;
+      }
+      touchStartX = null;
+      touchDeltaX = 0;
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (!document.getElementById('lightbox').classList.contains('open')) return;
+      if (e.key === 'ArrowLeft') lightboxStep(-1);
+      else if (e.key === 'ArrowRight') lightboxStep(1);
+      else if (e.key === 'Escape') closeLightbox();
+    });
   </script>
 </body>
 </html>
