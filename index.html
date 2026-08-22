@@ -82,6 +82,8 @@
     .info-window .tel { color: #1971c2; font-weight: bold; font-size: 0.8rem; }
 
     /* ===================== 오른쪽/하단 상세정보 드로어 ===================== */
+    .drawer-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 99; }
+    .drawer-backdrop.open { display: block; }
     .drawer { position: fixed; top: 0; right: -420px; width: 400px; height: 100%; background: #ffffff; box-shadow: -4px 0 16px rgba(0,0,0,0.15); z-index: 100; transition: right 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; }
     .drawer.open { right: 0; }
     .drawer-header { padding: 18px 20px; background: #2c3e50; color: white; display: flex; justify-content: space-between; align-items: center; }
@@ -182,6 +184,7 @@
   </main>
 
   <!-- 상세정보 드로어 -->
+  <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
   <div class="drawer" id="drawer">
     <div class="drawer-header">
       <h2 id="drawerTitle">캠핑장 상세정보</h2>
@@ -224,6 +227,9 @@
     let userLat = null;
     let userLng = null;
     let userMarker = null;
+
+    // 상세정보 드로어 히스토리 상태 (뒤로가기로 닫기 지원)
+    let drawerHistoryPushed = false;
 
     window.onload = function() {
       buildFilterChips();
@@ -321,6 +327,12 @@
 
     function applyFilters() {
       searchCamping();
+      closeFilterPanel();
+    }
+
+    function closeFilterPanel() {
+      document.getElementById('filterBody').classList.remove('open');
+      document.getElementById('filterToggleIcon').textContent = '▾';
     }
 
     // ---------- 위치 관련 ----------
@@ -439,10 +451,7 @@
             }
 
             if (selectedInduty.size > 0) {
-              items = items.filter(place => {
-                const induty = place.induty || "";
-                return [...selectedInduty].some(cat => induty.includes(cat));
-              });
+              items = items.filter(place => matchesIndutyFilter(place));
             }
 
             items = sortByDistanceIfAvailable(items);
@@ -468,6 +477,25 @@
       return place.homepage && place.homepage.startsWith("http")
         ? place.homepage
         : `https://map.kakao.com/link/search/${encodeURIComponent(place.facltNm)}`;
+    }
+
+    // induty(업종) 텍스트는 데이터 품질이 들쭉날쭉해서(대부분 "일반야영장"으로만 표기),
+    // 각 유형별 사이트 보유 수(숫자 필드)도 함께 확인해서 판정한다.
+    function matchesIndutyFilter(place) {
+      const induty = place.induty || "";
+      const num = (v) => parseInt(v, 10) > 0;
+
+      return [...selectedInduty].some(cat => {
+        if (induty.includes(cat)) return true;
+        switch (cat) {
+          case "일반야영장": return num(place.gnrlSiteCo);
+          case "자동차야영장": return num(place.autoSiteCo);
+          case "글램핑": return num(place.glampSiteCo);
+          case "카라반": return num(place.caravSiteCo);
+          case "개인야영장": return num(place.indvdlCaravSiteCo);
+          default: return false;
+        }
+      });
     }
 
     // ---------- 목록 렌더링 ----------
@@ -620,7 +648,14 @@
         </div>
       `;
 
+      document.getElementById('drawerBackdrop').classList.add('open');
       drawer.classList.add('open');
+
+      // 뒤로가기 버튼/제스처로도 자연스럽게 닫히도록 히스토리 상태 추가
+      if (!drawerHistoryPushed) {
+        history.pushState({ drawerOpen: true }, '');
+        drawerHistoryPushed = true;
+      }
 
       const url = `https://apis.data.go.kr/B551011/GoCamping/imageList?serviceKey=${encodeURIComponent(API_KEY)}&numOfRows=12&pageNo=1&MobileOS=ETC&MobileApp=CampingApp&_type=json&contentId=${place.contentId}`;
 
@@ -648,7 +683,21 @@
 
     function closeDrawer() {
       document.getElementById('drawer').classList.remove('open');
+      document.getElementById('drawerBackdrop').classList.remove('open');
+      if (drawerHistoryPushed) {
+        drawerHistoryPushed = false;
+        history.back();
+      }
     }
+
+    window.addEventListener('popstate', () => {
+      // 뒤로가기 버튼/제스처로 진입한 경우: 드로어가 열려있었다면 페이지 이동 없이 닫기만 한다
+      if (document.getElementById('drawer').classList.contains('open')) {
+        drawerHistoryPushed = false;
+        document.getElementById('drawer').classList.remove('open');
+        document.getElementById('drawerBackdrop').classList.remove('open');
+      }
+    });
 
     function openLightbox(url) {
       document.getElementById('lightboxImg').src = url;
