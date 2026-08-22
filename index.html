@@ -26,7 +26,7 @@
     .filter-toggle { width: 100%; padding: 11px 16px; background: #f1f3f5; border: none; text-align: left; font-size: 0.85rem; font-weight: bold; color: #495057; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     .filter-toggle .count-badge { background: #20c997; color: #fff; font-size: 0.7rem; padding: 1px 7px; border-radius: 10px; margin-left: 6px; }
     .filter-body { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
-    .filter-body.open { max-height: 600px; overflow-y: auto; }
+    .filter-body.open { max-height: 900px; overflow-y: auto; }
     .filter-body-inner { padding: 14px 16px 16px; }
 
     .filter-group { margin-bottom: 14px; }
@@ -118,9 +118,9 @@
     /* ===================== 넓은 화면(태블릿/PC): 목록을 그리드로, 필터를 가로 배치로 ===================== */
     @media (min-width: 900px) {
       .topbar-inner { padding: 16px 24px 12px; }
-      .filter-body-inner { padding: 16px 24px 20px; display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 20px; align-items: start; }
+      .filter-body-inner { padding: 16px 24px 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 20px; align-items: start; }
       .filter-group { margin-bottom: 0; }
-      .btn-apply { width: auto; padding: 12px 24px; align-self: end; }
+      .btn-apply { grid-column: 1 / -1; width: auto; padding: 12px 32px; justify-self: end; }
       .status-bar { padding: 9px 24px; }
       #listView { padding: 20px 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; align-content: start; }
       .card { margin-bottom: 0; }
@@ -158,8 +158,16 @@
           <div class="chip-group" id="indutyChips"></div>
         </div>
         <div class="filter-group">
-          <h4>지역으로 찾기</h4>
+          <h4>지역으로 찾기 (복수 선택 가능)</h4>
           <div class="chip-group" id="regionChips"></div>
+        </div>
+        <div class="filter-group">
+          <h4>부대시설로 찾기</h4>
+          <div class="chip-group" id="facilityChips"></div>
+        </div>
+        <div class="filter-group">
+          <h4>입지구분으로 찾기</h4>
+          <div class="chip-group" id="locationChips"></div>
         </div>
         <div class="filter-group">
           <h4>상호명으로 검색</h4>
@@ -209,6 +217,8 @@
       "대구광역시", "경상북도", "부산광역시", "울산광역시", "경상남도",
       "광주광역시", "전라북도", "전라남도", "제주특별자치도"
     ];
+    const FACILITY_OPTIONS = ["전기", "무선인터넷", "온수", "샤워실", "화장실", "물놀이장", "놀이터", "취사장", "운동시설", "장작판매"];
+    const LOCATION_OPTIONS = ["산", "계곡", "강", "바다", "호수", "숲", "도심"];
 
     let map;
     let mapInitialized = false;
@@ -216,12 +226,16 @@
     const statusBar = document.getElementById('statusBar');
 
     let currentMarkers = [];
-    let currentInfowindows = [];
     let allPlaces = []; // 마지막으로 불러온 원본 데이터(필터 전)
 
     // 필터 상태
     let selectedInduty = new Set();
-    let selectedRegion = "";
+    let selectedRegion = new Set();
+    let selectedFacility = new Set();
+    let selectedLocation = new Set();
+
+    // 마지막으로 API에서 확인한 전국 캠핑장 총 개수(필터 적용 전)
+    let lastTotalCount = null;
 
     // 사용자 현재 위치
     let userLat = null;
@@ -265,7 +279,7 @@
         map.setCenter(new kakao.maps.LatLng(userLat, userLng));
         map.setLevel(7);
       }
-      renderMarkers(allPlaces);
+      renderMarkers(allPlaces, { fitBounds: false });
     }
 
     // ---------- 필터 UI ----------
@@ -278,44 +292,40 @@
     }
 
     function buildFilterChips() {
-      const indutyWrap = document.getElementById('indutyChips');
-      indutyWrap.innerHTML = `<button class="chip active" data-val="" onclick="toggleInduty('')">전체</button>` +
-        INDUTY_OPTIONS.map(v => `<button class="chip" data-val="${v}" onclick="toggleInduty('${v}')">${v}</button>`).join('');
-
-      const regionWrap = document.getElementById('regionChips');
-      regionWrap.innerHTML = `<button class="chip active" data-val="" onclick="selectRegion('')">전체</button>` +
-        REGION_OPTIONS.map(v => `<button class="chip" data-val="${v}" onclick="selectRegion('${v}')">${v}</button>`).join('');
+      buildChipGroup('indutyChips', INDUTY_OPTIONS, selectedInduty);
+      buildChipGroup('regionChips', REGION_OPTIONS, selectedRegion);
+      buildChipGroup('facilityChips', FACILITY_OPTIONS, selectedFacility);
+      buildChipGroup('locationChips', LOCATION_OPTIONS, selectedLocation);
     }
 
-    function toggleInduty(val) {
-      const wrap = document.getElementById('indutyChips');
+    function buildChipGroup(wrapId, options, selectedSet) {
+      const wrap = document.getElementById(wrapId);
+      wrap.innerHTML = `<button class="chip active" data-val="">전체</button>` +
+        options.map(v => `<button class="chip" data-val="${v}">${v}</button>`).join('');
+
+      [...wrap.children].forEach(chip => {
+        chip.addEventListener('click', () => toggleChip(wrapId, chip.dataset.val, selectedSet));
+      });
+    }
+
+    function toggleChip(wrapId, val, selectedSet) {
       if (val === '') {
-        selectedInduty.clear();
+        selectedSet.clear();
       } else {
-        if (selectedInduty.has(val)) selectedInduty.delete(val);
-        else selectedInduty.add(val);
+        if (selectedSet.has(val)) selectedSet.delete(val);
+        else selectedSet.add(val);
       }
+      const wrap = document.getElementById(wrapId);
       [...wrap.children].forEach(chip => {
         const v = chip.dataset.val;
-        const active = v === '' ? selectedInduty.size === 0 : selectedInduty.has(v);
+        const active = v === '' ? selectedSet.size === 0 : selectedSet.has(v);
         chip.classList.toggle('active', active);
       });
       updateFilterCountBadge();
     }
 
-    function selectRegion(val) {
-      selectedRegion = (selectedRegion === val) ? "" : val;
-      if (val === "") selectedRegion = "";
-      const wrap = document.getElementById('regionChips');
-      [...wrap.children].forEach(chip => {
-        const v = chip.dataset.val;
-        chip.classList.toggle('active', v === '' ? selectedRegion === '' : v === selectedRegion);
-      });
-      updateFilterCountBadge();
-    }
-
     function updateFilterCountBadge() {
-      const count = selectedInduty.size + (selectedRegion ? 1 : 0);
+      const count = selectedInduty.size + selectedRegion.size + selectedFacility.size + selectedLocation.size;
       const badge = document.getElementById('filterCountBadge');
       if (count > 0) {
         badge.style.display = 'inline-block';
@@ -326,7 +336,7 @@
     }
 
     function applyFilters() {
-      searchCamping();
+      searchCamping({ fitBounds: true });
       closeFilterPanel();
     }
 
@@ -352,9 +362,9 @@
             map.setCenter(new kakao.maps.LatLng(userLat, userLng));
             map.setLevel(7);
           }
-          searchCamping();
+          searchCamping({ fitBounds: false });
         },
-        () => { searchCamping(); },
+        () => { searchCamping({ fitBounds: false }); },
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
       );
     }
@@ -375,7 +385,7 @@
           map.setCenter(new kakao.maps.LatLng(userLat, userLng));
           map.setLevel(7);
           btn.classList.remove('locating');
-          searchCamping();
+          searchCamping({ fitBounds: false });
         },
         () => {
           btn.classList.remove('locating');
@@ -414,63 +424,114 @@
       return items.slice().sort((a, b) => a._distanceKm - b._distanceKm);
     }
 
+    // 공공데이터포털 API는 한 페이지 최대 500건까지만 내려주므로, 전체 개수를 먼저 확인하고
+    // 나머지 페이지를 이어서 가져와 500개 제한 없이 전국 데이터를 모두 모은다.
+    async function fetchAllCampingItems(keyword) {
+      const numOfRows = 500;
+      const maxPages = 20; // 안전장치: 최대 1만 건까지
+      const baseParams = keyword !== ""
+        ? `https://apis.data.go.kr/B551011/GoCamping/searchList?serviceKey=${encodeURIComponent(API_KEY)}&MobileOS=ETC&MobileApp=CampingApp&_type=json&keyword=${encodeURIComponent(keyword)}`
+        : `https://apis.data.go.kr/B551011/GoCamping/basedList?serviceKey=${encodeURIComponent(API_KEY)}&MobileOS=ETC&MobileApp=CampingApp&_type=json`;
+
+      const parsePage = (data) => {
+        const body = data.response && data.response.body;
+        if (!body || !body.items || !body.items.item) return { items: [], totalCount: 0 };
+        const items = Array.isArray(body.items.item) ? body.items.item : [body.items.item];
+        return { items, totalCount: parseInt(body.totalCount, 10) || items.length };
+      };
+
+      const firstRes = await fetch(`${baseParams}&numOfRows=${numOfRows}&pageNo=1`);
+      const firstData = await firstRes.json();
+      const first = parsePage(firstData);
+
+      lastTotalCount = first.totalCount;
+      let items = first.items;
+
+      const totalPages = Math.min(Math.ceil(first.totalCount / numOfRows), maxPages);
+      if (totalPages > 1) {
+        const pagePromises = [];
+        for (let p = 2; p <= totalPages; p++) {
+          pagePromises.push(
+            fetch(`${baseParams}&numOfRows=${numOfRows}&pageNo=${p}`)
+              .then(r => r.json())
+              .then(d => parsePage(d).items)
+              .catch(() => [])
+          );
+        }
+        const restPages = await Promise.all(pagePromises);
+        restPages.forEach(arr => { items = items.concat(arr); });
+      }
+
+      return items;
+    }
+
     // ---------- 검색 ----------
 
-    function searchCamping() {
+    function searchCamping(options = {}) {
+      const fitBounds = options.fitBounds !== false;
       const keyword = document.getElementById('keyword').value.trim();
       statusBar.textContent = "데이터 검색 중...";
 
-      const url = keyword !== ""
-        ? `https://apis.data.go.kr/B551011/GoCamping/searchList?serviceKey=${encodeURIComponent(API_KEY)}&numOfRows=500&pageNo=1&MobileOS=ETC&MobileApp=CampingApp&_type=json&keyword=${encodeURIComponent(keyword)}`
-        : `https://apis.data.go.kr/B551011/GoCamping/basedList?serviceKey=${encodeURIComponent(API_KEY)}&numOfRows=500&pageNo=1&MobileOS=ETC&MobileApp=CampingApp&_type=json`;
-
-      fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          if (data.response && data.response.body && data.response.body.items && data.response.body.items.item) {
-            let items = data.response.body.items.item;
-            if (!Array.isArray(items)) items = [items];
-
-            if (selectedRegion !== "") {
-              items = items.filter(place => {
-                const doNm = place.doNm || "";
-                const addr1 = place.addr1 || "";
-                let shortRegion = "";
-                if (selectedRegion.startsWith("충청북")) shortRegion = "충북";
-                else if (selectedRegion.startsWith("충청남")) shortRegion = "충남";
-                else if (selectedRegion.startsWith("경상북")) shortRegion = "경북";
-                else if (selectedRegion.startsWith("경상남")) shortRegion = "경남";
-                else if (selectedRegion.startsWith("전라북")) shortRegion = "전북";
-                else if (selectedRegion.startsWith("전라남")) shortRegion = "전남";
-                return (
-                  doNm === selectedRegion ||
-                  addr1.includes(selectedRegion) ||
-                  (shortRegion !== "" && (doNm.includes(shortRegion) || addr1.includes(shortRegion)))
-                );
-              });
-            }
-
-            if (selectedInduty.size > 0) {
-              items = items.filter(place => matchesIndutyFilter(place));
-            }
-
-            items = sortByDistanceIfAvailable(items);
-            allPlaces = items;
-
-            const statusText = userLat != null
-              ? `📍 내 위치 기준 가까운 순 · ${items.length}개 캠핑장`
-              : `검색 결과: ${items.length}개 캠핑장`;
-
-            renderAll(items, statusText);
-          } else {
-            allPlaces = [];
-            renderAll([], "검색된 캠핑장이 없습니다.");
+      fetchAllCampingItems(keyword)
+        .then(items => {
+          if (selectedRegion.size > 0) {
+            items = items.filter(place => matchesRegionFilter(place));
           }
+
+          if (selectedInduty.size > 0) {
+            items = items.filter(place => matchesIndutyFilter(place));
+          }
+
+          if (selectedFacility.size > 0) {
+            items = items.filter(place => {
+              const sbrsCl = place.sbrsCl || "";
+              return [...selectedFacility].every(f => sbrsCl.includes(f));
+            });
+          }
+
+          if (selectedLocation.size > 0) {
+            items = items.filter(place => {
+              const lctCl = place.lctCl || "";
+              return [...selectedLocation].some(l => lctCl.includes(l));
+            });
+          }
+
+          items = sortByDistanceIfAvailable(items);
+          allPlaces = items;
+
+          const totalNote = (selectedRegion.size === 0 && selectedInduty.size === 0 &&
+                              selectedFacility.size === 0 && selectedLocation.size === 0 && !keyword && lastTotalCount)
+            ? ` (전국 총 ${lastTotalCount.toLocaleString()}개)` : '';
+
+          const statusText = userLat != null
+            ? `📍 내 위치 기준 가까운 순 · ${items.length}개 캠핑장${totalNote}`
+            : `검색 결과: ${items.length}개 캠핑장${totalNote}`;
+
+          renderAll(items, statusText, { fitBounds });
         })
         .catch(error => {
           console.error("API Fetch Error:", error);
           statusBar.textContent = "API 연결 오류";
         });
+    }
+
+    function matchesRegionFilter(place) {
+      const doNm = place.doNm || "";
+      const addr1 = place.addr1 || "";
+      return [...selectedRegion].some(region => {
+        let shortRegion = "";
+        if (region.startsWith("충청북")) shortRegion = "충북";
+        else if (region.startsWith("충청남")) shortRegion = "충남";
+        else if (region.startsWith("경상북")) shortRegion = "경북";
+        else if (region.startsWith("경상남")) shortRegion = "경남";
+        else if (region.startsWith("전라북")) shortRegion = "전북";
+        else if (region.startsWith("전라남")) shortRegion = "전남";
+        return (
+          doNm === region ||
+          addr1.includes(region) ||
+          (shortRegion !== "" && (doNm.includes(shortRegion) || addr1.includes(shortRegion)))
+        );
+      });
     }
 
     function getHomepageUrl(place) {
@@ -500,11 +561,11 @@
 
     // ---------- 목록 렌더링 ----------
 
-    function renderAll(dataList, statusText) {
+    function renderAll(dataList, statusText, options = {}) {
       statusBar.textContent = statusText;
       dataList.forEach(place => { window[`place_${place.contentId}`] = place; });
       renderList(dataList);
-      renderMarkers(dataList);
+      renderMarkers(dataList, options);
     }
 
     function renderList(dataList) {
@@ -548,64 +609,83 @@
 
     // ---------- 지도 렌더링 ----------
 
-    function renderMarkers(dataList) {
+    function renderMarkers(dataList, options = {}) {
       if (!mapInitialized) return; // 지도가 아직 생성되지 않았으면 지도 탭을 처음 열 때 렌더링됨
 
       clearMarkers();
 
+      const bounds = new kakao.maps.LatLngBounds();
+      let hasPoint = false;
+
       dataList.forEach((place) => {
         if (!place.mapX || !place.mapY) return;
         const coords = new kakao.maps.LatLng(place.mapY, place.mapX);
+        bounds.extend(coords);
+        hasPoint = true;
 
+        // 인포윈도우는 마커마다 미리 만들지 않고, 클릭 시 공용 인포윈도우 하나에 내용을 채워 연다.
+        // (데이터가 수천 건일 수 있어 마커 자체를 가볍게 유지하기 위함)
         const marker = new kakao.maps.Marker({ map: map, position: coords });
         marker.__contentId = place.contentId;
         currentMarkers.push(marker);
 
-        const homepageUrl = getHomepageUrl(place);
-        const distanceLine = Number.isFinite(place._distanceKm)
-          ? `<span class="distance">📍 내 위치에서 ${place._distanceKm.toFixed(1)}km</span><br/>` : '';
-
-        const infowindow = new kakao.maps.InfoWindow({
-          content: `
-            <div class="info-window">
-              <a class="iw-title" href="${homepageUrl}" target="_blank" rel="noopener">${place.facltNm} <span class="link-icon">🔗</span></a>
-              <span style="color:#1971c2; font-size:0.75rem;">🏷️ ${place.induty || '캠핑장'}</span><br/>
-              ${distanceLine}
-              <small style="color:#666;">📍 ${place.addr1 || '주소 정보 없음'}</small><br/>
-              <span class="tel">📞 ${place.tel || '전화번호 미등록'}</span><br/>
-              <button class="btn-detail" onclick="openDrawerFromMap('${place.contentId}')">📷 상세정보 & 사진 보기</button>
-            </div>
-          `
-        });
-        infowindow.__contentId = place.contentId;
-        currentInfowindows.push(infowindow);
-
         window[`place_${place.contentId}`] = place;
 
         kakao.maps.event.addListener(marker, 'click', () => {
-          closeAllInfoWindows();
-          infowindow.open(map, marker);
           map.panTo(coords);
+          openMarkerInfo(place.contentId);
         });
       });
+
+      // 필터 검색 등으로 결과가 바뀐 경우엔 결과가 한눈에 보이도록 지도 범위를 재조정한다.
+      // (내 위치 버튼 등에서는 fitBounds:false로 호출해 위치 중심 뷰를 유지한다)
+      if (options.fitBounds !== false && hasPoint) {
+        if (userLat != null) bounds.extend(new kakao.maps.LatLng(userLat, userLng));
+        map.setBounds(bounds);
+      }
+    }
+
+    let sharedInfowindow = null;
+
+    function buildInfoWindowHtml(place) {
+      const homepageUrl = getHomepageUrl(place);
+      const distanceLine = Number.isFinite(place._distanceKm)
+        ? `<span class="distance">📍 내 위치에서 ${place._distanceKm.toFixed(1)}km</span><br/>` : '';
+
+      return `
+        <div class="info-window">
+          <a class="iw-title" href="${homepageUrl}" target="_blank" rel="noopener">${place.facltNm} <span class="link-icon">🔗</span></a>
+          <span style="color:#1971c2; font-size:0.75rem;">🏷️ ${place.induty || '캠핑장'}</span><br/>
+          ${distanceLine}
+          <small style="color:#666;">📍 ${place.addr1 || '주소 정보 없음'}</small><br/>
+          <span class="tel">📞 ${place.tel || '전화번호 미등록'}</span><br/>
+          <button class="btn-detail" onclick="openDrawerFromMap('${place.contentId}')">📷 상세정보 & 사진 보기</button>
+        </div>
+      `;
+    }
+
+    function openMarkerInfo(contentId) {
+      const marker = currentMarkers.find(m => m.__contentId === contentId);
+      const place = window[`place_${contentId}`];
+      if (!marker || !place) return;
+
+      if (!sharedInfowindow) sharedInfowindow = new kakao.maps.InfoWindow({ removable: false, zIndex: 10 });
+      sharedInfowindow.setContent(buildInfoWindowHtml(place));
+      sharedInfowindow.open(map, marker);
     }
 
     function openInfowindowFor(contentId) {
-      const idx = currentMarkers.findIndex(m => m.__contentId === contentId);
-      if (idx === -1) return;
-      closeAllInfoWindows();
-      currentInfowindows[idx].open(map, currentMarkers[idx]);
+      openMarkerInfo(contentId);
     }
 
     function clearMarkers() {
       currentMarkers.forEach(marker => marker.setMap(null));
       currentMarkers = [];
       closeAllInfoWindows();
-      currentInfowindows = [];
     }
 
     function closeAllInfoWindows() {
-      currentInfowindows.forEach(iw => iw.close());
+      if (sharedInfowindow) sharedInfowindow.close();
     }
 
     function openDrawerFromMap(contentId) {
