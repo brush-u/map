@@ -87,10 +87,10 @@
     .drawer-backdrop.open { display: block; }
     .drawer { position: fixed; top: 0; right: -420px; width: 400px; height: 100%; background: #ffffff; box-shadow: -4px 0 16px rgba(0,0,0,0.15); z-index: 100; transition: right 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; }
     .drawer.open { right: 0; }
-    .drawer-header { padding: 18px 20px; background: #2c3e50; color: white; display: flex; justify-content: space-between; align-items: center; }
-    .drawer-header h2 { font-size: 1.18rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .drawer-close { font-size: 1.7rem; color: #ced4da; cursor: pointer; background: none; border: none; outline: none; }
-    .drawer-close:hover { color: white; }
+    .drawer-header { padding: 16px 18px; background: #2c3e50; color: white; display: flex; align-items: center; gap: 10px; }
+    .drawer-header h2 { font-size: 1.18rem; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .drawer-back { flex-shrink: 0; font-size: 1.9rem; line-height: 1; color: #fff; cursor: pointer; background: none; border: none; outline: none; padding: 0 4px; margin-left: -4px; }
+    .drawer-back:active { color: #20c997; }
     .drawer-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; padding: 20px; }
     .drawer-section { margin-bottom: 20px; }
     .drawer-section h4 { font-size: 0.98rem; color: #495057; margin-bottom: 8px; border-bottom: 2px solid #e9ecef; padding-bottom: 4px; }
@@ -217,11 +217,11 @@
   </main>
 
   <!-- 상세정보 드로어 -->
-  <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
+  <div class="drawer-backdrop" id="drawerBackdrop" onclick="requestCloseOverlay('drawer')"></div>
   <div class="drawer" id="drawer">
     <div class="drawer-header">
+      <button class="drawer-back" onclick="requestCloseOverlay('drawer')" aria-label="뒤로가기">‹</button>
       <h2 id="drawerTitle">캠핑장 상세정보</h2>
-      <button class="drawer-close" onclick="closeDrawer()">&times;</button>
     </div>
     <div class="drawer-body" id="drawerBody"></div>
   </div>
@@ -229,7 +229,7 @@
   <!-- 라이트박스(스와이프 갤러리) -->
   <div class="lightbox" id="lightbox">
     <span class="lightbox-counter" id="lightboxCounter"></span>
-    <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+    <button class="lightbox-close" onclick="requestCloseOverlay('lightbox')">&times;</button>
     <button class="lightbox-nav prev" id="lightboxPrev" onclick="lightboxStep(-1)">‹</button>
     <button class="lightbox-nav next" id="lightboxNext" onclick="lightboxStep(1)">›</button>
     <div class="lightbox-track" id="lightboxTrack"></div>
@@ -270,13 +270,59 @@
     let userLng = null;
     let userMarker = null;
 
-    // 상세정보 드로어 히스토리 상태 (뒤로가기로 닫기 지원)
-    let drawerHistoryPushed = false;
+    // 상세정보 드로어 / 사진뷰어 등 오버레이 뒤로가기 스택
+    // (각자 따로 히스토리를 다루면 하나를 닫을 때 다른 것까지 같이 닫히는 문제가 있어 하나로 통합)
+    let overlayStack = [];
 
     window.onload = function() {
       buildFilterChips();
       initLocation();
     };
+
+    // 오버레이(드로어/라이트박스)를 열 때 호출: 스택에 쌓고 히스토리 항목을 하나 추가한다
+    function pushOverlayState(name) {
+      if (overlayStack[overlayStack.length - 1] === name) return; // 이미 최상단이면 중복 push 방지
+      overlayStack.push(name);
+      history.pushState({ ovDepth: overlayStack.length }, '');
+    }
+
+    // 사용자가 명시적으로 닫기(뒤로가기 버튼, 바깥 영역 탭)를 시도했을 때 호출
+    // 실제 DOM 정리는 popstate 핸들러에서 스택 기준으로 한 번만 일어난다
+    function requestCloseOverlay(name) {
+      if (overlayStack.length > 0 && overlayStack[overlayStack.length - 1] === name) {
+        history.back();
+      } else {
+        forceCloseOverlay(name);
+      }
+    }
+
+    // 히스토리를 건드리지 않고 즉시 닫기 (내부적으로 상태를 리셋할 때 사용)
+    function forceCloseOverlay(name) {
+      const idx = overlayStack.lastIndexOf(name);
+      if (idx !== -1) overlayStack.splice(idx, 1);
+      applyOverlayClosedDom(name);
+    }
+
+    function applyOverlayClosedDom(name) {
+      if (name === 'drawer') {
+        document.getElementById('drawer').classList.remove('open');
+        document.getElementById('drawerBackdrop').classList.remove('open');
+      } else if (name === 'lightbox') {
+        document.getElementById('lightbox').classList.remove('open');
+      }
+    }
+
+    function resetOverlaysSilently() {
+      while (overlayStack.length > 0) {
+        applyOverlayClosedDom(overlayStack.pop());
+      }
+    }
+
+    // 뒤로가기 버튼/제스처: 우리가 쌓은 스택 기준으로 정확히 맨 위 오버레이 하나만 닫는다
+    window.addEventListener('popstate', () => {
+      const name = overlayStack.pop();
+      if (name) applyOverlayClosedDom(name);
+    });
 
     // ---------- 뷰 전환 (목록 ⇄ 지도) ----------
 
@@ -602,7 +648,7 @@
     const RENDER_BATCH = 40;
 
     function renderList(dataList) {
-      closeDrawer();
+      resetOverlaysSilently();
       if (listObserver) { listObserver.disconnect(); listObserver = null; }
       currentDataList = dataList;
       renderedCount = 0;
@@ -822,7 +868,7 @@
           </div>
         </div>
         <div class="drawer-section">
-          <h4>🖼️ 갤러리 (클릭 시 확대 · 스와이프로 넘기기)</h4>
+          <h4>🖼️ 갤러리</h4>
           <div id="drawerGalleryContainer">
             <div style="text-align:center; padding:20px;">
               <div class="spinner"></div>
@@ -836,14 +882,11 @@
       drawer.classList.add('open');
 
       // 뒤로가기 버튼/제스처로도 자연스럽게 닫히도록 히스토리 상태 추가
-      if (!drawerHistoryPushed) {
-        history.pushState({ drawerOpen: true }, '');
-        drawerHistoryPushed = true;
-      }
+      pushOverlayState('drawer');
 
       if (hasCoords) loadNearbyAmenities(place);
 
-      const url = `https://apis.data.go.kr/B551011/GoCamping/imageList?serviceKey=${encodeURIComponent(API_KEY)}&numOfRows=12&pageNo=1&MobileOS=ETC&MobileApp=CampingApp&_type=json&contentId=${place.contentId}`;
+      const url = `https://apis.data.go.kr/B551011/GoCamping/imageList?serviceKey=${encodeURIComponent(API_KEY)}&numOfRows=30&pageNo=1&MobileOS=ETC&MobileApp=CampingApp&_type=json&contentId=${place.contentId}`;
 
       fetch(url)
         .then(response => response.json())
@@ -931,35 +974,11 @@
       });
     }
 
-    function closeDrawer() {
-      document.getElementById('drawer').classList.remove('open');
-      document.getElementById('drawerBackdrop').classList.remove('open');
-      if (drawerHistoryPushed) {
-        drawerHistoryPushed = false;
-        history.back();
-      }
-    }
-
-    window.addEventListener('popstate', () => {
-      // 뒤로가기 버튼/제스처로 진입한 경우: 열려있는 오버레이를 페이지 이동 없이 닫기만 한다
-      if (document.getElementById('lightbox').classList.contains('open')) {
-        lightboxHistoryPushed = false;
-        document.getElementById('lightbox').classList.remove('open');
-        return;
-      }
-      if (document.getElementById('drawer').classList.contains('open')) {
-        drawerHistoryPushed = false;
-        document.getElementById('drawer').classList.remove('open');
-        document.getElementById('drawerBackdrop').classList.remove('open');
-      }
-    });
-
     // ---------- 라이트박스(스와이프 갤러리) ----------
 
     let currentGalleryImages = [];
     let lightboxImages = [];
     let lightboxIndex = 0;
-    let lightboxHistoryPushed = false;
     let touchStartX = null;
     let touchDeltaX = 0;
 
@@ -978,10 +997,7 @@
       const lightbox = document.getElementById('lightbox');
       lightbox.classList.add('open');
 
-      if (!lightboxHistoryPushed) {
-        history.pushState({ lightboxOpen: true }, '');
-        lightboxHistoryPushed = true;
-      }
+      pushOverlayState('lightbox');
     }
 
     function updateLightboxChrome() {
@@ -1000,13 +1016,7 @@
     }
 
     function closeLightbox() {
-      const lightbox = document.getElementById('lightbox');
-      if (!lightbox.classList.contains('open')) return;
-      lightbox.classList.remove('open');
-      if (lightboxHistoryPushed) {
-        lightboxHistoryPushed = false;
-        history.back();
-      }
+      requestCloseOverlay('lightbox');
     }
 
     // 스와이프 제스처
