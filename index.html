@@ -27,7 +27,7 @@
     .filter-toggle { width: 100%; padding: 11px 16px; background: #f1f3f5; border: none; text-align: left; font-size: 0.92rem; font-weight: bold; color: #495057; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     .filter-toggle .count-badge { background: #20c997; color: #fff; font-size: 0.76rem; padding: 1px 7px; border-radius: 10px; margin-left: 6px; }
     .filter-body { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
-    .filter-body.open { max-height: 1000px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+    .filter-body.open { max-height: min(1000px, 65vh); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
     .filter-body-inner { padding: 14px 16px 16px; }
 
     .filter-group { margin-bottom: 14px; }
@@ -112,13 +112,18 @@
     .nearby-item a { color: #1971c2; font-size: 0.82rem; font-weight: bold; text-decoration: none; margin-left: 8px; white-space: nowrap; }
     .nearby-empty { color: #adb5bd; font-size: 0.85rem; padding: 4px 0; }
 
+    .weather-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; }
+    .weather-item { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 3px; }
+    .weather-label { font-size: 0.8rem; color: #868e96; }
+    .weather-value { font-size: 1.08rem; font-weight: bold; color: #2c3e50; }
+
     /* ===================== 라이트박스(스와이프 갤러리) ===================== */
     .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 2000; opacity: 0; transition: opacity 0.25s ease; }
     .lightbox.open { display: block; opacity: 1; }
-    .lightbox-track { display: flex; width: 100%; height: 100%; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); touch-action: pan-y; }
+    .lightbox-track { display: flex; width: 100%; height: 100%; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); touch-action: none; }
     .lightbox-track.dragging { transition: none; }
     .lightbox-slide { flex: 0 0 100%; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 40px 16px; }
-    .lightbox-slide img { max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; -webkit-user-drag: none; user-select: none; }
+    .lightbox-slide img { max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); object-fit: contain; -webkit-user-drag: none; user-select: none; transform-origin: center center; touch-action: none; }
     .lightbox-close { position: absolute; top: max(20px, env(safe-area-inset-top)); right: 20px; color: white; font-size: 2rem; cursor: pointer; font-weight: bold; z-index: 2; background: rgba(0,0,0,0.3); width: 40px; height: 40px; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; line-height: 1; }
     .lightbox-counter { position: absolute; top: max(28px, calc(env(safe-area-inset-top) + 8px)); left: 50%; transform: translateX(-50%); color: white; font-size: 0.92rem; font-weight: bold; background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 999px; z-index: 2; }
     .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.35); border: none; color: #fff; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
@@ -154,7 +159,7 @@
   </style>
 
   <!-- 카카오맵 API -->
-  <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=services"></script>
+  <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=services,clusterer"></script>
 </head>
 <body>
 
@@ -245,7 +250,7 @@
       "대구광역시", "경상북도", "부산광역시", "울산광역시", "경상남도",
       "광주광역시", "전라북도", "전라남도", "제주특별자치도"
     ];
-    const FACILITY_OPTIONS = ["전기", "무선인터넷", "온수", "샤워실", "화장실", "물놀이장", "놀이터", "취사장", "운동시설", "장작판매"];
+    const FACILITY_OPTIONS = ["전기", "무선인터넷", "온수", "샤워실", "화장실", "물놀이장", "수영장", "트램펄린", "매점", "놀이터", "취사장", "운동시설", "장작판매", "반려동물"];
     const LOCATION_OPTIONS = ["산", "계곡", "강", "바다", "호수", "숲", "도심"];
 
     let map;
@@ -345,8 +350,10 @@
       const container = document.getElementById('map');
       map = new kakao.maps.Map(container, {
         center: new kakao.maps.LatLng(36.3, 127.8),
-        level: 11
+        level: 11,
+        mapTypeId: kakao.maps.MapTypeId.HYBRID // 위성지도(라벨 포함)를 기본으로 사용
       });
+      map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
       mapInitialized = true;
       if (userLat != null) {
         placeUserMarker();
@@ -724,7 +731,26 @@
       return card;
     }
 
-    // ---------- 지도 렌더링 ----------
+    // ---------- 지도 렌더링 (마커 클러스터링) ----------
+
+    let markerClusterer = null;
+
+    function ensureClusterer() {
+      if (markerClusterer) return markerClusterer;
+      markerClusterer = new kakao.maps.MarkerClusterer({
+        map: map,
+        averageCenter: true,
+        minLevel: 6, // 이 레벨(더 넓은 범위) 이상으로 축소하면 지역별 개수로 묶어서 표시
+        disableClickZoom: false, // 클러스터(숫자) 클릭 시 자동으로 확대되어 개별 마커가 드러남
+        calculator: [10, 50, 200],
+        styles: [
+          { width: '38px', height: '38px', background: 'rgba(32,201,151,0.9)', borderRadius: '50%', color: '#fff', textAlign: 'center', lineHeight: '38px', fontSize: '13px', fontWeight: 'bold', border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' },
+          { width: '50px', height: '50px', background: 'rgba(23,113,194,0.9)', borderRadius: '50%', color: '#fff', textAlign: 'center', lineHeight: '50px', fontSize: '14px', fontWeight: 'bold', border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' },
+          { width: '62px', height: '62px', background: 'rgba(44,62,80,0.92)', borderRadius: '50%', color: '#fff', textAlign: 'center', lineHeight: '62px', fontSize: '15px', fontWeight: 'bold', border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }
+        ]
+      });
+      return markerClusterer;
+    }
 
     function renderMarkers(dataList, options = {}) {
       if (!mapInitialized) return; // 지도가 아직 생성되지 않았으면 지도 탭을 처음 열 때 렌더링됨
@@ -734,6 +760,7 @@
       const validPlaces = dataList.filter(p => p.mapX && p.mapY);
       if (validPlaces.length === 0) return;
 
+      const clusterer = ensureClusterer();
       const bounds = new kakao.maps.LatLngBounds();
       const fitBounds = options.fitBounds !== false;
       const MARKER_CHUNK = 300;
@@ -741,6 +768,7 @@
 
       function addChunk() {
         const end = Math.min(idx + MARKER_CHUNK, validPlaces.length);
+        const chunkMarkers = [];
         for (; idx < end; idx++) {
           const place = validPlaces[idx];
           const coords = new kakao.maps.LatLng(place.mapY, place.mapX);
@@ -748,9 +776,11 @@
 
           // 인포윈도우는 마커마다 미리 만들지 않고, 클릭 시 공용 인포윈도우 하나에 내용을 채워 연다.
           // (데이터가 수천 건일 수 있어 마커 자체를 가볍게 유지하기 위함)
-          const marker = new kakao.maps.Marker({ map: map, position: coords });
+          // map은 직접 지정하지 않고 클러스터러가 표시 여부를 관리하도록 한다.
+          const marker = new kakao.maps.Marker({ position: coords });
           marker.__contentId = place.contentId;
           currentMarkers.push(marker);
+          chunkMarkers.push(marker);
 
           window[`place_${place.contentId}`] = place;
 
@@ -759,6 +789,8 @@
             openMarkerInfo(place.contentId);
           });
         }
+
+        clusterer.addMarkers(chunkMarkers);
 
         if (idx < validPlaces.length) {
           requestAnimationFrame(addChunk);
@@ -807,7 +839,7 @@
     }
 
     function clearMarkers() {
-      currentMarkers.forEach(marker => marker.setMap(null));
+      if (markerClusterer) markerClusterer.clear();
       currentMarkers = [];
       closeAllInfoWindows();
     }
@@ -860,10 +892,18 @@
         </div>
         ${place.intro ? `<div class="drawer-section"><h4>📝 소개글</h4><p>${place.intro}</p></div>` : ''}
         <div class="drawer-section">
+          <h4>🌤️ 현재 날씨 &amp; 일출·일몰</h4>
+          <div id="weatherContainer">
+            ${hasCoords
+              ? `<div style="text-align:center; padding:16px;"><div class="spinner"></div><p style="font-size:0.8rem; color:#888; margin-top:8px;">날씨 정보를 불러오는 중...</p></div>`
+              : `<p class="nearby-empty">좌표 정보가 없어 날씨를 확인할 수 없습니다.</p>`}
+          </div>
+        </div>
+        <div class="drawer-section">
           <h4>🛒 주변 편의시설</h4>
           <div id="nearbyContainer">
             ${hasCoords
-              ? `<div style="text-align:center; padding:16px;"><div class="spinner"></div><p style="font-size:0.8rem; color:#888; margin-top:8px;">주변 편의점·마트·정육점을 찾는 중...</p></div>`
+              ? `<div style="text-align:center; padding:16px;"><div class="spinner"></div><p style="font-size:0.8rem; color:#888; margin-top:8px;">주변 시설을 찾는 중...</p></div>`
               : `<p class="nearby-empty">좌표 정보가 없어 주변 시설을 찾을 수 없습니다.</p>`}
           </div>
         </div>
@@ -884,7 +924,10 @@
       // 뒤로가기 버튼/제스처로도 자연스럽게 닫히도록 히스토리 상태 추가
       pushOverlayState('drawer');
 
-      if (hasCoords) loadNearbyAmenities(place);
+      if (hasCoords) {
+        loadNearbyAmenities(place);
+        loadWeatherInfo(place);
+      }
 
       const url = `https://apis.data.go.kr/B551011/GoCamping/imageList?serviceKey=${encodeURIComponent(API_KEY)}&numOfRows=30&pageNo=1&MobileOS=ETC&MobileApp=CampingApp&_type=json&contentId=${place.contentId}`;
 
@@ -958,29 +1001,98 @@
       const coords = new kakao.maps.LatLng(place.mapY, place.mapX);
 
       Promise.all([
-        searchNearbyPlaces({ category: 'CS2', radius: 2000, limit: 3 }, coords),
-        searchNearbyPlaces({ category: 'MT1', radius: 5000, limit: 3 }, coords),
-        searchNearbyPlaces({ keyword: '정육점', radius: 5000, limit: 3 }, coords)
-      ]).then(([convenience, marts, butchers]) => {
+        searchNearbyPlaces({ category: 'CS2', radius: 2000, limit: 3 }, coords),   // 편의점
+        searchNearbyPlaces({ category: 'MT1', radius: 5000, limit: 3 }, coords),   // 마트
+        searchNearbyPlaces({ keyword: '정육점', radius: 5000, limit: 3 }, coords),  // 정육점
+        searchNearbyPlaces({ category: 'HP8', radius: 5000, limit: 2 }, coords),   // 병원
+        searchNearbyPlaces({ category: 'PM9', radius: 5000, limit: 2 }, coords),   // 약국
+        searchNearbyPlaces({ category: 'OL7', radius: 5000, limit: 2 }, coords),   // 주유소(동계 등유 등)
+        searchNearbyPlaces({ category: 'FD6', radius: 3000, limit: 3 }, coords),   // 음식점
+        searchNearbyPlaces({ category: 'AT4', radius: 6000, limit: 3 }, coords)    // 관광명소
+      ]).then(([convenience, marts, butchers, hospitals, pharmacies, gas, restaurants, attractions]) => {
         const container = document.getElementById('nearbyContainer');
         if (!container) return; // 드로어가 이미 닫혔을 수 있음
         container.innerHTML =
           renderNearbyGroup('🏪 편의점', convenience) +
           renderNearbyGroup('🛒 마트', marts) +
-          renderNearbyGroup('🥩 정육점', butchers);
+          renderNearbyGroup('🥩 정육점', butchers) +
+          renderNearbyGroup('🏥 병원', hospitals) +
+          renderNearbyGroup('💊 약국', pharmacies) +
+          renderNearbyGroup('⛽ 주유소 (동계 등유 등)', gas) +
+          renderNearbyGroup('🍽️ 맛집', restaurants) +
+          renderNearbyGroup('🏞️ 주변 관광명소', attractions);
       }).catch(() => {
         const container = document.getElementById('nearbyContainer');
         if (container) container.innerHTML = '<p class="nearby-empty">주변 시설 정보를 불러오지 못했습니다.</p>';
       });
     }
 
-    // ---------- 라이트박스(스와이프 갤러리) ----------
+    // ---------- 날씨 / 일출·일몰 (Open-Meteo, API 키 불필요) ----------
+
+    function loadWeatherInfo(place) {
+      const container = document.getElementById('weatherContainer');
+      if (!container) return;
+
+      const lat = place.mapY, lon = place.mapX;
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,wind_speed_10m,relative_humidity_2m&daily=sunrise,sunset&timezone=Asia%2FSeoul`;
+      const airUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=pm10,pm2_5`;
+
+      Promise.all([
+        fetch(weatherUrl).then(r => r.json()).catch(() => null),
+        fetch(airUrl).then(r => r.json()).catch(() => null)
+      ]).then(([weather, air]) => {
+        const c = weather && weather.current;
+        if (!container.isConnected) return; // 드로어가 이미 닫혔을 수 있음
+        if (!c) {
+          container.innerHTML = '<p class="nearby-empty">날씨 정보를 불러오지 못했습니다.</p>';
+          return;
+        }
+        const sunrise = weather.daily && weather.daily.sunrise && weather.daily.sunrise[0];
+        const sunset = weather.daily && weather.daily.sunset && weather.daily.sunset[0];
+        const fmtTime = (iso) => iso ? iso.split('T')[1] : null;
+        const pm10 = air && air.current && air.current.pm10;
+        const pm25 = air && air.current && air.current.pm2_5;
+
+        container.innerHTML = `
+          <div class="weather-grid">
+            <div class="weather-item"><span class="weather-label">🌡️ 기온</span><span class="weather-value">${c.temperature_2m}°C</span></div>
+            <div class="weather-item"><span class="weather-label">💧 습도</span><span class="weather-value">${c.relative_humidity_2m}%</span></div>
+            <div class="weather-item"><span class="weather-label">🌬️ 풍속 (타프 주의)</span><span class="weather-value">${c.wind_speed_10m}m/s</span></div>
+            <div class="weather-item"><span class="weather-label">☔ 강수량</span><span class="weather-value">${c.precipitation}mm</span></div>
+            ${pm10 != null ? `<div class="weather-item"><span class="weather-label">🌫️ 미세먼지</span><span class="weather-value">${Math.round(pm10)}㎍/㎥</span></div>` : ''}
+            ${pm25 != null ? `<div class="weather-item"><span class="weather-label">🌫️ 초미세먼지</span><span class="weather-value">${Math.round(pm25)}㎍/㎥</span></div>` : ''}
+            ${sunrise ? `<div class="weather-item"><span class="weather-label">🌅 일출</span><span class="weather-value">${fmtTime(sunrise)}</span></div>` : ''}
+            ${sunset ? `<div class="weather-item"><span class="weather-label">🌇 일몰</span><span class="weather-value">${fmtTime(sunset)}</span></div>` : ''}
+          </div>
+          <p style="font-size:0.74rem; color:#adb5bd; margin-top:8px;">※ 참고용 정보이며 기상청 공식 예보와 다를 수 있습니다.</p>
+        `;
+      }).catch(() => {
+        if (container.isConnected) container.innerHTML = '<p class="nearby-empty">날씨 정보를 불러오지 못했습니다.</p>';
+      });
+    }
+
+    // ---------- 라이트박스(스와이프 갤러리 + 핀치줌) ----------
 
     let currentGalleryImages = [];
     let lightboxImages = [];
     let lightboxIndex = 0;
     let touchStartX = null;
+    let touchStartY = null;
     let touchDeltaX = 0;
+    let touchDeltaY = 0;
+    let touchAxis = null; // 'x' | 'y' | null
+
+    // 핀치줌 / 확대 상태 (현재 보고 있는 사진 기준)
+    let zoomScale = 1;
+    let zoomPanX = 0;
+    let zoomPanY = 0;
+    let isPinching = false;
+    let isPanning = false;
+    let pinchStartDist = 0;
+    let pinchStartScale = 1;
+    let panStartX = 0;
+    let panStartY = 0;
+    let lastTapTime = 0;
 
     function openLightbox(images, index) {
       lightboxImages = images;
@@ -988,13 +1100,16 @@
 
       const track = document.getElementById('lightboxTrack');
       track.innerHTML = lightboxImages.map(u => `
-        <div class="lightbox-slide"><img src="${u}" alt="확대 이미지"></div>
+        <div class="lightbox-slide"><img src="${u}" alt="확대 이미지" draggable="false"></div>
       `).join('');
       track.style.transform = `translateX(${-lightboxIndex * 100}%)`;
 
+      const lightbox = document.getElementById('lightbox');
+      lightbox.style.opacity = '';
+
+      resetZoom();
       updateLightboxChrome();
 
-      const lightbox = document.getElementById('lightbox');
       lightbox.classList.add('open');
 
       pushOverlayState('lightbox');
@@ -1006,9 +1121,42 @@
       document.getElementById('lightboxNext').disabled = lightboxIndex >= lightboxImages.length - 1;
     }
 
+    function getActiveImg() {
+      const track = document.getElementById('lightboxTrack');
+      const slide = track.children[lightboxIndex];
+      return slide ? slide.querySelector('img') : null;
+    }
+
+    function resetZoom() {
+      zoomScale = 1;
+      zoomPanX = 0;
+      zoomPanY = 0;
+      document.querySelectorAll('#lightboxTrack img').forEach(img => {
+        img.style.transition = '';
+        img.style.transform = '';
+      });
+    }
+
+    function applyZoomTransform(withTransition) {
+      const img = getActiveImg();
+      if (!img) return;
+      img.style.transition = withTransition ? 'transform 0.18s ease-out' : 'none';
+      img.style.transform = `translate(${zoomPanX}px, ${zoomPanY}px) scale(${zoomScale})`;
+    }
+
+    function clampPan() {
+      const img = getActiveImg();
+      if (!img) return;
+      const maxX = (img.clientWidth * (zoomScale - 1)) / 2;
+      const maxY = (img.clientHeight * (zoomScale - 1)) / 2;
+      zoomPanX = Math.max(-maxX, Math.min(maxX, zoomPanX));
+      zoomPanY = Math.max(-maxY, Math.min(maxY, zoomPanY));
+    }
+
     function lightboxStep(dir) {
       const next = lightboxIndex + dir;
       if (next < 0 || next > lightboxImages.length - 1) return;
+      resetZoom();
       lightboxIndex = next;
       const track = document.getElementById('lightboxTrack');
       track.style.transform = `translateX(${-lightboxIndex * 100}%)`;
@@ -1019,34 +1167,144 @@
       requestCloseOverlay('lightbox');
     }
 
-    // 스와이프 제스처
+    function touchDistance(t1, t2) {
+      return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+    }
+
+    // 스와이프 제스처: 좌우로 밀면 사진 넘기기, 위/아래로 밀면 닫기, 두 손가락이면 핀치줌
+    // 기종에 따라 브라우저가 가로 스와이프를 뒤로가기 제스처 등으로 가로채는 경우가 있어
+    // touch-action:none + preventDefault로 제스처 처리를 전부 JS가 직접 담당하도록 한다.
     const lightboxTrackEl = document.getElementById('lightboxTrack');
+
     lightboxTrackEl.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        isPinching = true;
+        isPanning = false;
+        pinchStartDist = touchDistance(e.touches[0], e.touches[1]);
+        pinchStartScale = zoomScale;
+        lightboxTrackEl.classList.add('dragging');
+        return;
+      }
+
+      if (zoomScale > 1.02) {
+        // 확대된 상태에서는 한 손가락으로 이미지 이동(팬)
+        isPanning = true;
+        panStartX = e.touches[0].clientX - zoomPanX;
+        panStartY = e.touches[0].clientY - zoomPanY;
+        return;
+      }
+
+      // 더블탭으로 확대/축소
+      const now = Date.now();
+      if (now - lastTapTime < 300) {
+        toggleDoubleTapZoom();
+        lastTapTime = 0;
+        return;
+      }
+      lastTapTime = now;
+
       touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
       touchDeltaX = 0;
+      touchDeltaY = 0;
+      touchAxis = null;
       lightboxTrackEl.classList.add('dragging');
     }, { passive: true });
 
     lightboxTrackEl.addEventListener('touchmove', (e) => {
+      if (isPinching && e.touches.length === 2) {
+        e.preventDefault();
+        const dist = touchDistance(e.touches[0], e.touches[1]);
+        zoomScale = Math.max(1, Math.min(4, pinchStartScale * (dist / pinchStartDist)));
+        clampPan();
+        applyZoomTransform(false);
+        return;
+      }
+
+      if (isPanning) {
+        e.preventDefault();
+        zoomPanX = e.touches[0].clientX - panStartX;
+        zoomPanY = e.touches[0].clientY - panStartY;
+        clampPan();
+        applyZoomTransform(false);
+        return;
+      }
+
       if (touchStartX == null) return;
       touchDeltaX = e.touches[0].clientX - touchStartX;
-      const percent = (-lightboxIndex * 100) + (touchDeltaX / window.innerWidth * 100);
-      lightboxTrackEl.style.transform = `translateX(${percent}%)`;
-    }, { passive: true });
+      touchDeltaY = e.touches[0].clientY - touchStartY;
 
-    lightboxTrackEl.addEventListener('touchend', () => {
-      lightboxTrackEl.classList.remove('dragging');
-      const threshold = window.innerWidth * 0.18;
-      if (touchDeltaX > threshold && lightboxIndex > 0) {
-        lightboxStep(-1);
-      } else if (touchDeltaX < -threshold && lightboxIndex < lightboxImages.length - 1) {
-        lightboxStep(1);
-      } else {
-        lightboxTrackEl.style.transform = `translateX(${-lightboxIndex * 100}%)`;
+      if (touchAxis == null && (Math.abs(touchDeltaX) > 6 || Math.abs(touchDeltaY) > 6)) {
+        touchAxis = Math.abs(touchDeltaX) > Math.abs(touchDeltaY) ? 'x' : 'y';
       }
+      if (touchAxis == null) return;
+
+      e.preventDefault();
+
+      if (touchAxis === 'x') {
+        const percent = (-lightboxIndex * 100) + (touchDeltaX / window.innerWidth * 100);
+        lightboxTrackEl.style.transform = `translateX(${percent}%)`;
+      } else {
+        lightboxTrackEl.style.transform = `translateX(${-lightboxIndex * 100}%) translateY(${touchDeltaY}px)`;
+        document.getElementById('lightbox').style.opacity = String(Math.max(0.35, 1 - Math.abs(touchDeltaY) / 400));
+      }
+    }, { passive: false });
+
+    lightboxTrackEl.addEventListener('touchend', (e) => {
+      lightboxTrackEl.classList.remove('dragging');
+
+      if (isPinching) {
+        isPinching = false;
+        if (zoomScale <= 1.02) { resetZoom(); applyZoomTransform(true); }
+        // 손가락 하나가 남아있으면 그대로 팬 모드로 자연스럽게 이어지도록 상태만 정리
+        if (e.touches.length === 1 && zoomScale > 1.02) {
+          isPanning = true;
+          panStartX = e.touches[0].clientX - zoomPanX;
+          panStartY = e.touches[0].clientY - zoomPanY;
+        }
+        return;
+      }
+
+      if (isPanning) {
+        if (e.touches.length === 0) isPanning = false;
+        return;
+      }
+
+      if (touchAxis === 'y') {
+        if (Math.abs(touchDeltaY) > 90) {
+          closeLightbox();
+        } else {
+          lightboxTrackEl.style.transform = `translateX(${-lightboxIndex * 100}%)`;
+          document.getElementById('lightbox').style.opacity = '';
+        }
+      } else if (touchAxis === 'x') {
+        const threshold = window.innerWidth * 0.18;
+        if (touchDeltaX > threshold && lightboxIndex > 0) {
+          lightboxStep(-1);
+        } else if (touchDeltaX < -threshold && lightboxIndex < lightboxImages.length - 1) {
+          lightboxStep(1);
+        } else {
+          lightboxTrackEl.style.transform = `translateX(${-lightboxIndex * 100}%)`;
+        }
+      }
+
       touchStartX = null;
+      touchStartY = null;
       touchDeltaX = 0;
+      touchDeltaY = 0;
+      touchAxis = null;
     });
+
+    function toggleDoubleTapZoom() {
+      if (zoomScale > 1.02) {
+        resetZoom();
+      } else {
+        zoomScale = 2.4;
+        zoomPanX = 0;
+        zoomPanY = 0;
+      }
+      applyZoomTransform(true);
+    }
 
     window.addEventListener('keydown', (e) => {
       if (!document.getElementById('lightbox').classList.contains('open')) return;
