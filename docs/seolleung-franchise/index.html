@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>선릉·역삼 외식 프랜차이즈 실시간 동적 큐레이션 맵</title>
-    <!-- 카카오 지도 API 및 라이브러리 (services, clusterer 로드) -->
+    <title>대규모 상권 데이터 동적 큐레이션 맵 (Massive Data Architecture)</title>
+    <!-- 카카오 지도 API 및 클러스터러 라이브러리 -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=clusterer,services"></script>
     <style>
         .franchise-hub-container {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 20px auto;
             padding: 20px;
             background: #f8fafc;
@@ -31,7 +31,7 @@
         }
         #map {
             width: 100%;
-            height: 500px;
+            height: 520px;
             border-radius: 10px;
             border: 1px solid #cbd5e1;
             margin-bottom: 16px;
@@ -44,30 +44,41 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-        .action-btn-group {
-            display: flex;
-            gap: 8px;
-        }
-        .api-btn, .gps-btn {
-            background: #0ea5e9;
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
+        .status-indicator {
+            font-size: 0.9rem;
             font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
+            color: #2563eb;
+            background: #eff6ff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid #bfdbfe;
         }
-        .api-btn { background: #2563eb; }
-        .api-btn:hover { background: #1d4ed8; }
-        .gps-btn:hover { background: #0284c7; }
-        
+        .filter-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 7px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn.active, .filter-btn:hover {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+        }
         .card-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 16px;
-            max-height: 650px;
+            max-height: 500px;
             overflow-y: auto;
             padding-right: 4px;
         }
@@ -87,23 +98,6 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         }
-        .fran-img-wrapper {
-            width: 64px;
-            min-width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            overflow: hidden;
-            background-color: #f1f5f9;
-            border: 2px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .fran-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
         .fran-content {
             flex-grow: 1;
             display: flex;
@@ -111,22 +105,16 @@
             justify-content: space-between;
             overflow: hidden;
         }
-        .badge-group {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 3px;
-            flex-wrap: wrap;
-        }
         .badge {
             display: inline-block;
             font-size: 0.65rem;
             font-weight: 700;
             padding: 2px 6px;
             border-radius: 4px;
+            background: #e0f2fe;
+            color: #0369a1;
+            margin-bottom: 4px;
         }
-        .badge-dynamic { background: #e0f2fe; color: #0369a1; }
-        .badge-hot { background: #ef4444; color: #ffffff; font-weight: 800; }
-        
         .fran-card h3 {
             font-size: 0.95rem;
             color: #1e293b;
@@ -147,43 +135,21 @@
             font-size: 0.72rem;
             color: #059669;
             font-weight: 600;
-            margin-bottom: 2px;
         }
-
         .soft-box-bubble {
-            position: relative;
             background: #ffffff;
             border: 1px solid #cbd5e1;
-            padding: 10px 14px;
+            padding: 8px 12px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             text-align: center;
-            width: 210px;
-            bottom: 45px;
-            left: -105px;
+            width: 180px;
             cursor: pointer;
         }
-        .soft-box-bubble .shop-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: #2563eb;
-            text-decoration: underline;
-            margin-bottom: 3px;
-            display: block;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .soft-box-bubble .shop-info {
-            font-size: 11px;
-            color: #059669;
-            font-weight: 600;
-        }
-
         .loading-box {
             text-align: center;
             grid-column: 1 / -1;
-            padding: 50px;
+            padding: 40px;
             color: #475569;
             font-weight: 600;
         }
@@ -193,47 +159,53 @@
 
 <div class="franchise-hub-container">
     <div class="hub-header">
-        <h2>🏛️ 선릉·역삼 외식 프랜차이즈 실시간 동적 큐레이션 맵</h2>
-        <p>카카오 장소 검색 API를 활용한 실시간 데이터 동적 조회 및 렌더링</p>
+        <h2>🏛️ 대규모 상권 데이터 실시간 뷰포트 큐레이션 맵</h2>
+        <p>수만 건의 데이터셋을 메모리에 로드하고, 지도 영역(Bounds) 및 클러스터러 기반으로 동적 핸들링</p>
     </div>
 
-    <!-- 카카오 지도 영역 -->
+    <!-- 지도 영역 -->
     <div id="map"></div>
 
-    <!-- 컨트롤 바 -->
+    <!-- 제어 및 필터 바 -->
     <div class="map-control-bar">
-        <div class="action-btn-group">
-            <button class="api-btn" onclick="searchDynamicPlaces('선릉역 솥내음')">🔍 '솥내음' 실시간 검색</button>
-            <button class="api-btn" style="background:#059669;" onclick="searchDynamicPlaces('선릉역 맛집')">🔍 '선릉역 맛집' 실시간 검색</button>
+        <div class="status-indicator" id="status-text">📊 전체 데이터 적재 대기 중...</div>
+        <div class="filter-buttons">
+            <button class="filter-btn active" onclick="filterCategory('all', event)">전체보기</button>
+            <button class="filter-btn" onclick="filterCategory('한식', event)">한식·육류</button>
+            <button class="filter-btn" onclick="filterCategory('카페', event)">카페·디저트</button>
+            <button class="filter-btn" onclick="filterCategory('일식', event)">일식·기타</button>
         </div>
-        <button class="gps-btn" onclick="sortByMyPosition()">📍 내 위치 기준 정렬</button>
     </div>
 
-    <!-- 상세 정보 카드 목록 -->
+    <!-- 카드 리스트 영역 -->
     <div class="card-grid" id="card-container">
-        <div class="loading-box">🔄 상단의 검색 버튼을 눌러 실시간 데이터를 동적으로 불러오세요.</div>
+        <div class="loading-box">🔄 대규모 데이터셋을 비동기로 로드하는 중입니다...</div>
     </div>
 </div>
 
 <script>
-    let dynamicData = [];
+    let massiveDataset = []; // 수만 건의 대규모 데이터셋 원본 저장소
     let map;
     let clusterer;
-    let ps; // 카카오 Places 서비스 객체
-    let currentCenter = { lat: 37.5045, lng: 127.0485 };
+    let currentCategory = 'all';
     let currentOverlay = null;
 
     function initMap() {
         const mapContainer = document.getElementById('map');
         const mapOption = {
-            center: new kakao.maps.LatLng(currentCenter.lat, currentCenter.lng),
-            level: 4
+            center: new kakao.maps.LatLng(37.5045, 127.0485),
+            level: 5
         };
         map = new kakao.maps.Map(mapContainer, mapOption);
-        
-        // 장소 검색 객체 생성
-        ps = new kakao.maps.services.Places();
 
+        clusterer = new kakao.maps.MarkerClusterer({
+            map: map,
+            averageCenter: true,
+            minLevel: 6
+        });
+
+        // 지도 이동/확대·축소(dragend, zoom_changed) 발생 시 뷰포트 내 데이터 동적 재렌더링
+        kakao.maps.event.addListener(map, 'bounds_changed', handleViewportRender);
         kakao.maps.event.addListener(map, 'click', function() {
             if (currentOverlay) {
                 currentOverlay.setMap(null);
@@ -241,153 +213,125 @@
             }
         });
 
-        clusterer = new kakao.maps.MarkerClusterer({
-            map: map,
-            averageCenter: true,
-            minLevel: 5
-        });
-
-        // 초기 실행 시 자동으로 선릉역 주변 '솥내음' 실시간 동적 조회 수행
-        searchDynamicPlaces('선릉역 솥내음');
+        // 대규모 데이터셋 비동기 로드 시뮬레이션 (실제 구현 시 공공 API 엔드포인트나 백엔드 대용량 JSON 호출)
+        fetchMassiveDataFromSource();
     }
 
-    // [핵심] 카카오 Places API를 이용한 실시간 동적 데이터 조회 함수
-    function searchDynamicPlaces(keyword) {
-        document.getElementById('card-container').innerHTML = `<div class="loading-box">🔄 '${keyword}' 데이터를 실시간으로 동적 조회 중입니다...</div>`;
-
-        ps.keywordSearch(keyword, function(data, status) {
-            if (status === kakao.maps.services.Status.OK) {
-                dynamicData = data.map(item => ({
-                    name: item.place_name,
-                    loc: item.road_address_name || item.address_name,
-                    phone: item.phone || '전화번호 없음',
-                    lat: parseFloat(item.y),
-                    lng: parseFloat(item.x),
-                    url: item.place_url,
-                    category: item.category_name
-                }));
-
-                renderCards(dynamicData);
-                renderMarkersAndCluster(dynamicData);
-
-                // 검색된 첫 번째 장소로 지도 중심 이동
-                if (dynamicData.length > 0) {
-                    const moveLatLon = new kakao.maps.LatLng(dynamicData[0].lat, dynamicData[0].lng);
-                    map.setCenter(moveLatLon);
-                }
-            } else {
-                document.getElementById('card-container').innerHTML = `<div class="loading-box">⚠️ 검색 결과가 없습니다.</div>`;
-                clusterer.clear();
-            }
-        });
+    // 대규모 데이터셋 적재 함수 (수만 건 규모 확장 구조)
+    async function fetchMassiveDataFromSource() {
+        document.getElementById('status-text').innerText = '⏳ 대규모 상권 데이터셋(수만 건) 파싱 및 인덱싱 중...';
+        
+        // 시뮬레이션을 위한 대량 가상 데이터 생성 (실무에서는 API 페이징 또는 대용량 스트림 처리)
+        setTimeout(() => {
+            massiveDataset = generateMockMassiveData(15000); // 15,000건 생성
+            document.getElementById('status-text').innerText = `✅ 총 ${massiveDataset.length.toLocaleString()}건 적재 완료 (뷰포트 연동 활성화)`;
+            handleViewportRender(); // 초기 뷰포트 기준 렌더링 실행
+        }, 500);
     }
 
-    function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3;
-        const φ1 = lat1 * Math.PI/180;
-        const φ2 = lat2 * Math.PI/180;
-        const Δφ = (lat2-lat1) * Math.PI/180;
-        const Δλ = (lon2-lon1) * Math.PI/180;
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                  Math.cos(φ1) * Math.cos(φ2) *
-                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-    }
+    // 대규모 테스트용 가상 데이터 생성기 (선릉·역삼 일대 좌표 분산)
+    function generateMockMassiveData(count) {
+        const categories = ['한식', '카페', '일식', '중식', '분식'];
+        const results = [];
+        const baseLat = 37.5045;
+        const baseLng = 127.0485;
 
-    function sortByMyPosition() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
-                
-                const moveLatLon = new kakao.maps.LatLng(userLat, userLng);
-                map.setCenter(moveLatLon);
+        for (let i = 1; i <= count; i++) {
+            // 반경 약 2~3km 내에 무작위 분산
+            const latOffset = (Math.random() - 0.5) * 0.04;
+            const lngOffset = (Math.random() - 0.5) * 0.05;
+            const cat = categories[Math.floor(Math.random() * categories.length)];
 
-                dynamicData.forEach(item => {
-                    item.distance = getDistance(userLat, userLng, item.lat, item.lng);
-                });
-                dynamicData.sort((a, b) => (a.distance || 0) - (b.distance || 0));
-
-                renderCards(dynamicData);
-                renderMarkersAndCluster(dynamicData);
-            }, function() {
-                alert('위치 정보를 가져올 수 없습니다.');
+            results.push({
+                id: i,
+                name: `상권프랜차이즈점_${i}`,
+                category: cat,
+                loc: `서울특별시 강남구 테헤란로 ${i % 500 + 1}길`,
+                phone: `02-${Math.floor(Math.random()*800+200)}-${Math.floor(Math.random()*9000+1000)}`,
+                lat: baseLat + latOffset,
+                lng: baseLng + lngOffset,
+                url: `https://map.kakao.com/link/search/선릉역 상권 ${i}`
             });
-        } else {
-            alert('위치 정보를 지원하지 않는 브라우저입니다.');
         }
+        return results;
     }
 
-    function renderMarkersAndCluster(data) {
-        clusterer.clear();
+    // [핵심 아키텍처] 현재 지도 화면(Bounds)과 카테고리 필터에 맞는 데이터만 골라내어 렌더링
+    function handleViewportRender() {
+        if (massiveDataset.length === 0) return;
 
-        const markers = data.map((item) => {
+        const bounds = map.getBounds(); // 현재 지도 뷰포트 영역 객체
+
+        // 1단계: 뷰포트 영역 내 포함 여부 및 카테고리 필터 동시 적용 (고성능 필터링)
+        const visibleData = massiveDataset.filter(item => {
+            if (currentCategory !== 'all' && item.category !== currentCategory) {
+                return false;
+            }
+            const coords = new kakao.maps.LatLng(item.lat, item.lng);
+            return bounds.contain(coords);
+        });
+
+        // 2단계: 지도 클러스터 및 마커 갱신
+        clusterer.clear();
+        const markers = visibleData.map(item => {
             const coords = new kakao.maps.LatLng(item.lat, item.lng);
             const marker = new kakao.maps.Marker({ position: coords });
 
             const content = document.createElement('div');
             content.className = 'soft-box-bubble';
-            content.innerHTML = `
-                <span class="shop-name">${item.name}</span>
-                <span class="shop-info">📞 ${item.phone}</span>
-            `;
-
-            content.onclick = function(e) {
+            content.innerHTML = `<strong>${item.name}</strong><br><span style="color:#059669; font-size:11px;">📞 ${item.phone}</span>`;
+            
+            content.onclick = (e) => {
                 e.stopPropagation();
                 window.open(item.url, '_blank');
             };
 
-            const customOverlay = new kakao.maps.CustomOverlay({
+            const overlay = new kakao.maps.CustomOverlay({
                 position: coords,
                 content: content,
-                yAnchor: 1.15
+                yAnchor: 1.3
             });
 
-            kakao.maps.event.addListener(marker, 'click', function() {
-                if (currentOverlay) {
-                    currentOverlay.setMap(null);
-                }
-                customOverlay.setMap(map);
-                currentOverlay = customOverlay;
+            kakao.maps.event.addListener(marker, 'click', () => {
+                if (currentOverlay) currentOverlay.setMap(null);
+                overlay.setMap(map);
+                currentOverlay = overlay;
             });
 
             return marker;
         });
 
         clusterer.addMarkers(markers);
+
+        // 3단계: 하단 카드 리스트 렌더링 (과도한 DOM 부하 방지를 위해 최대 100건만 슬라이싱 표출)
+        renderCards(visibleData.slice(0, 100), visibleData.length);
     }
 
-    function renderCards(data) {
+    // 카드 UI 렌더링
+    function renderCards(data, totalVisibleCount) {
         const container = document.getElementById('card-container');
         container.innerHTML = '';
 
-        data.forEach(item => {
-            const distText = item.distance !== undefined ? (item.distance >= 1000 
-                ? (item.distance / 1000).toFixed(1) + ' km' 
-                : Math.round(item.distance) + ' m') : '위치 정렬 전';
+        if (data.length === 0) {
+            container.innerHTML = '<div class="loading-box">현재 지도 화면 내에 표출할 상권 데이터가 없습니다. 지도를 이동해 보세요.</div>';
+            return;
+        }
 
+        // 상단 상태바에 현재 화면 가시 데이터 수 업데이트
+        document.getElementById('status-text').innerText = `👁️ 현재 화면 내 가시 데이터: ${totalVisibleCount.toLocaleString()}건 중 상위 ${data.length}건 표출`;
+
+        data.forEach(item => {
             const card = document.createElement('div');
             card.className = 'fran-card';
-            
-            card.onclick = function() {
-                window.open(item.url, '_blank');
-            };
+            card.onclick = () => window.open(item.url, '_blank');
 
             card.innerHTML = `
-                <div class="fran-img-wrapper">
-                    <img src="https://via.placeholder.com/64?text=Place" class="fran-img" alt="${item.name}">
-                </div>
                 <div class="fran-content">
                     <div>
-                        <div class="badge-group">
-                            <span class="badge badge-dynamic">API 실시간 연동</span>
-                            <span class="badge badge-hot">🔥 추천</span>
-                        </div>
+                        <span class="badge">📂 ${item.category}</span>
                         <h3>${item.name}</h3>
                         <p class="fran-loc">📍 ${item.loc}</p>
                         <p class="fran-phone">📞 ${item.phone}</p>
-                        <p class="fran-dist" style="font-size:0.72srem; color:#0284c7; font-weight:600;">🏃 거리: ${distText} | 카테고리: ${item.category}</p>
                     </div>
                 </div>
             `;
@@ -395,8 +339,17 @@
         });
     }
 
+    // 카테고리 필터 변경 핸들러
+    function filterCategory(category, event) {
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        if (event) event.target.classList.add('active');
+
+        currentCategory = category;
+        handleViewportRender(); // 필터 변경 시 즉시 뷰포트 기준 재계산
+    }
+
     window.onload = function() {
-        if(typeof kakao !== 'undefined' && kakao.maps) {
+        if (typeof kakao !== 'undefined' && kakao.maps) {
             kakao.maps.load(initMap);
         }
     };
