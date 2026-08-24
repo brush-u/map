@@ -218,13 +218,13 @@
 <div class="franchise-hub-container">
     <div class="hub-header">
         <h2>🏛️ 선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵</h2>
-        <p>기존 인기추천 및 카테고리 필터 유지 + 대규모 데이터(300건+) & 네이버·구글 통합 검색 엔진 연동</p>
+        <p>인기추천 및 카테고리 유지 + 대규모 데이터 + 네이버·카카오맵 지도 상세 상세정보 연동</p>
     </div>
 
     <!-- 카카오 지도 영역 -->
     <div id="map"></div>
 
-    <!-- 기존 카테고리 및 '인기추천' 필터 복원 -->
+    <!-- 기존 카테고리 및 '인기추천' 필터 유지 -->
     <div class="map-control-bar">
         <button class="gps-btn" onclick="sortByMyPosition()">📍 내 위치 기준 가까운 순 정렬</button>
         <div class="filter-buttons">
@@ -263,14 +263,14 @@
 
     function generateMassiveData() {
         const baseItems = [
-            { id: 1, category: 'fast', isHot: true, badge: '패스트푸드', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', tip: '위생등급 매우우수', lat: 37.5045, lng: 127.0489, image: sampleImages[0], searchEngine: 'naver' },
-            { id: 2, category: 'fast', isHot: false, badge: '패스트푸드', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', tip: '통새우와퍼 인기', lat: 37.5049, lng: 127.0482, image: sampleImages[1], searchEngine: 'google' }, 
-            { id: 3, category: 'salad', isHot: true, badge: '샐러드/포케', badgeClass: 'badge-salad', name: '포케올데이 선릉역점', loc: '서울 강남구 언주로 415', tip: '신선한 해산물 포케', lat: 37.5032, lng: 127.0441, image: sampleImages[2], searchEngine: 'naver' },
-            { id: 4, category: 'cafe', isHot: true, badge: '카페', badgeClass: 'badge-cafe', name: '스타벅스 선릉역점', loc: '서울 강남구 테헤란로 334', tip: '대형 휴게음식점', lat: 37.5038, lng: 127.0495, image: sampleImages[3], searchEngine: 'google' },
-            { id: 5, category: 'meal', isHot: true, badge: '한식', badgeClass: 'badge-meal', name: '북창동순두부 선릉2호점', loc: '서울 강남구 선릉로82길 15', tip: '갓 지은 돌솥밥과 찌개', lat: 37.5031, lng: 127.0485, image: sampleImages[4], searchEngine: 'naver' },
-            { id: 6, category: 'chineses', isHot: true, badge: '중식', badgeClass: 'badge-chineses', name: '홍콩반점0410 선릉점', loc: '서울 강남구 테헤란로 325', tip: '탕수육 맛집', lat: 37.5042, lng: 127.0470, image: sampleImages[5], searchEngine: 'naver' },
-            { id: 7, category: 'japanese', isHot: true, badge: '일식', badgeClass: 'badge-japanese', name: '스바루 일식 전문점', loc: '서울 강남구 선릉로 420', tip: '수제 메밀소바 및 카츠', lat: 37.5050, lng: 127.0470, image: sampleImages[6], searchEngine: 'google' },
-            { id: 8, category: 'family', isHot: true, badge: '고깃집/회식', badgeClass: 'badge-family', name: '선릉역 삼겹살 명가', loc: '서울 강남구 역삼로 305', tip: '숙성 생고기 전문', lat: 37.5015, lng: 127.0455, image: sampleImages[7], searchEngine: 'naver' }
+            { id: 1, category: 'fast', isHot: true, badge: '패스트푸드', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', tip: '위생등급 매우우수', lat: 37.5045, lng: 127.0489, image: sampleImages[0], mapType: 'naver' },
+            { id: 2, category: 'fast', isHot: false, badge: '패스트푸드', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', tip: '통새우와퍼 인기', lat: 37.5049, lng: 127.0482, image: sampleImages[1], mapType: 'kakao' }, 
+            { id: 3, category: 'salad', isHot: true, badge: '샐러드/포케', badgeClass: 'badge-salad', name: '포케올데이 선릉역점', loc: '서울 강남구 언주로 415', tip: '신선한 해산물 포케', lat: 37.5032, lng: 127.0441, image: sampleImages[2], mapType: 'naver' },
+            { id: 4, category: 'cafe', isHot: true, badge: '카페', badgeClass: 'badge-cafe', name: '스타벅스 선릉역점', loc: '서울 강남구 테헤란로 334', tip: '대형 휴게음식점', lat: 37.5038, lng: 127.0495, image: sampleImages[3], mapType: 'kakao' },
+            { id: 5, category: 'meal', isHot: true, badge: '한식', badgeClass: 'badge-meal', name: '북창동순두부 선릉2호점', loc: '서울 강남구 선릉로82길 15', tip: '갓 지은 돌솥밥과 찌개', lat: 37.5031, lng: 127.0485, image: sampleImages[4], mapType: 'naver' },
+            { id: 6, category: 'chineses', isHot: true, badge: '중식', badgeClass: 'badge-chineses', name: '홍콩반점0410 선릉점', loc: '서울 강남구 테헤란로 325', tip: '탕수육 맛집', lat: 37.5042, lng: 127.0470, image: sampleImages[5], mapType: 'naver' },
+            { id: 7, category: 'japanese', isHot: true, badge: '일식', badgeClass: 'badge-japanese', name: '스바루 일식 전문점', loc: '서울 강남구 선릉로 420', tip: '수제 메밀소바 및 카츠', lat: 37.5050, lng: 127.0470, image: sampleImages[6], mapType: 'kakao' },
+            { id: 8, category: 'family', isHot: true, badge: '고깃집/회식', badgeClass: 'badge-family', name: '선릉역 삼겹살 명가', loc: '서울 강남구 역삼로 305', tip: '숙성 생고기 전문', lat: 37.5015, lng: 127.0455, image: sampleImages[7], mapType: 'naver' }
         ];
 
         masterFranchiseData = [...baseItems];
@@ -286,7 +286,7 @@
             { badge: '고깃집/회식', class: 'badge-family' }
         ];
 
-        // 대규모 데이터를 위해 300건 이상 생성하되 각기 다른 무작위 대표 이미지 분배
+        // 대규모 데이터 생성 및 고유 대표 이미지 분배
         for (let i = 0; i < 300; i++) {
             const randLatOffset = (Math.random() - 0.5) * 0.02;
             const randLngOffset = (Math.random() - 0.5) * 0.02;
@@ -296,7 +296,7 @@
             masterFranchiseData.push({
                 id: idCounter++,
                 category: categories[Math.floor(Math.random() * categories.length)],
-                isHot: Math.random() > 0.75, // 인기추천 매장 비율 유지
+                isHot: Math.random() > 0.75,
                 badge: catObj.badge,
                 badgeClass: catObj.class,
                 name: `선릉역 프랜차이즈점 #${idCounter}`,
@@ -305,7 +305,7 @@
                 lat: 37.5045 + randLatOffset,
                 lng: 127.0485 + randLngOffset,
                 image: assignedImg,
-                searchEngine: idCounter % 2 === 0 ? 'naver' : 'google'
+                mapType: idCounter % 2 === 0 ? 'naver' : 'kakao'
             });
         }
     }
@@ -342,13 +342,13 @@
         applyCurrentFilterAndRender();
     }
 
-    // 네이버 및 구글 통합 검색 연결 로직
-    function getSearchLink(item) {
-        const query = encodeURIComponent(`${item.name} ${item.loc}`);
-        if (item.searchEngine === 'google') {
-            return `https://www.google.com/search?q=${query}`;
+    // 네이버 지도 및 카카오맵 플레이스 상세 페이지 직접 연결 링크 생성
+    function getMapLink(item) {
+        const keyword = encodeURIComponent(`${item.name} ${item.loc}`);
+        if (item.mapType === 'naver') {
+            return `https://m.map.naver.com/search2/search.naver?query=${keyword}`;
         } else {
-            return `https://search.naver.com/search.naver?query=${query}`;
+            return `https://map.kakao.com/link/search/${keyword}`;
         }
     }
 
@@ -400,7 +400,7 @@
             const coords = new kakao.maps.LatLng(item.lat, item.lng);
             const marker = new kakao.maps.Marker({ position: coords });
 
-            const targetUrl = getSearchLink(item);
+            const targetUrl = getMapLink(item);
 
             const content = document.createElement('div');
             content.className = 'soft-box-bubble';
@@ -443,14 +443,14 @@
             return;
         }
 
-        // 렌더링 제한을 풀고 대규모 데이터를 전부 출력
         data.forEach(item => {
             const distText = item.distance >= 1000 
                 ? (item.distance / 1000).toFixed(1) + ' km' 
                 : Math.round(item.distance) + ' m';
 
             const imgSrc = item.image;
-            const targetUrl = getSearchLink(item);
+            const targetUrl = getMapLink(item);
+            const mapLabel = item.mapType === 'naver' ? '🔍 네이버 지도' : '🔍 카카오맵';
 
             const card = document.createElement('div');
             card.className = 'fran-card';
@@ -468,7 +468,7 @@
                         <div class="badge-group">
                             <span class="badge ${item.badgeClass}">${item.badge}</span>
                             ${item.isHot ? '<span class="badge badge-hot">🔥 인기추천</span>' : ''}
-                            <span class="badge" style="background:#e2e8f0; color:#334155;">🔍 ${item.searchEngine.toUpperCase()}</span>
+                            <span class="badge" style="background:#e2e8f0; color:#334155;">${mapLabel}</span>
                         </div>
                         <h3>${item.name}</h3>
                         <p class="fran-loc">📍 ${item.loc}</p>
