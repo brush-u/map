@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>선릉·역삼 공공데이터 대규모 프랜차이즈 큐레이션 맵</title>
+    <title>대규모 상권 8대 그룹 뷰포트 큐레이션 맵</title>
     <!-- 카카오 지도 API 및 클러스터러 라이브러리 -->
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=clusterer"></script>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=clusterer,services"></script>
     <style>
         .franchise-hub-container {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-            max-width: 1100px;
+            max-width: 1300px;
             margin: 20px auto;
             padding: 20px;
             background: #f8fafc;
@@ -31,7 +31,7 @@
         }
         #map {
             width: 100%;
-            height: 480px;
+            height: 500px;
             border-radius: 10px;
             border: 1px solid #cbd5e1;
             margin-bottom: 16px;
@@ -42,21 +42,17 @@
             align-items: center;
             margin-bottom: 20px;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 12px;
         }
-        .gps-btn {
-            background: #0ea5e9;
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 20px;
+        .status-indicator {
             font-size: 0.85rem;
             font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
+            color: #2563eb;
+            background: #eff6ff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid #bfdbfe;
         }
-        .gps-btn:hover { background: #0284c7; }
-        
         .filter-buttons {
             display: flex;
             gap: 6px;
@@ -64,7 +60,7 @@
         }
         .filter-btn {
             padding: 7px 12px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 600;
             border: 1px solid #cbd5e1;
             background: #ffffff;
@@ -82,7 +78,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 16px;
-            max-height: 650px;
+            max-height: 480px;
             overflow-y: auto;
             padding-right: 4px;
         }
@@ -102,23 +98,6 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         }
-        .fran-img-wrapper {
-            width: 64px;
-            min-width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            overflow: hidden;
-            background-color: #f1f5f9;
-            border: 2px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .fran-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
         .fran-content {
             flex-grow: 1;
             display: flex;
@@ -129,7 +108,7 @@
         .badge-group {
             display: flex;
             gap: 4px;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
             flex-wrap: wrap;
         }
         .badge {
@@ -139,15 +118,15 @@
             padding: 2px 6px;
             border-radius: 4px;
         }
-        .badge-fast { background: #fee2e2; color: #991b1b; }
-        .badge-salad { background: #dcfce7; color: #166534; }
-        .badge-cafe { background: #fef3c7; color: #92400e; }
-        .badge-meal { background: #e0f2fe; color: #0369a1; }
-        .badge-chineses { background: #ffedd5; color: #9a3412; }
-        .badge-japanese { background: #fae8ff; color: #701a75; }
-        .badge-family { background: #ccfbf1; color: #115e59; }
-        .badge-hot { background: #ef4444; color: #ffffff; font-weight: 800; }
-        
+        .badge-group-1 { background: #fee2e2; color: #991b1b; }
+        .badge-group-2 { background: #ffedd5; color: #9a3412; }
+        .badge-group-3 { background: #fae8ff; color: #701a75; }
+        .badge-group-4 { background: #fef3c7; color: #92400e; }
+        .badge-group-5 { background: #e0f2fe; color: #0369a1; }
+        .badge-group-6 { background: #fce7f3; color: #9d174d; }
+        .badge-group-7 { background: #dcfce7; color: #166534; }
+        .badge-group-8 { background: #f1f5f9; color: #334155; }
+
         .fran-card h3 {
             font-size: 0.95rem;
             color: #1e293b;
@@ -164,50 +143,25 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .fran-dist {
+        .fran-phone {
             font-size: 0.72rem;
+            color: #059669;
             font-weight: 600;
-            color: #0284c7;
         }
-
         .soft-box-bubble {
-            position: relative;
             background: #ffffff;
             border: 1px solid #cbd5e1;
-            padding: 10px 14px;
+            padding: 8px 12px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             text-align: center;
             width: 190px;
-            bottom: 45px;
-            left: -95px;
             cursor: pointer;
-            transition: box-shadow 0.2s;
         }
-        .soft-box-bubble:hover {
-            box-shadow: 0 6px 16px rgba(0,0,0,0.22);
-        }
-        .soft-box-bubble .shop-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: #2563eb;
-            text-decoration: underline;
-            margin-bottom: 3px;
-            display: block;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .soft-box-bubble .shop-info {
-            font-size: 11px;
-            color: #0284c7;
-            font-weight: 600;
-        }
-
         .loading-box {
             text-align: center;
             grid-column: 1 / -1;
-            padding: 50px;
+            padding: 40px;
             color: #475569;
             font-weight: 600;
         }
@@ -217,114 +171,70 @@
 
 <div class="franchise-hub-container">
     <div class="hub-header">
-        <h2>🏛️ 선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵</h2>
-        <p>기존 인기추천 및 카테고리 필터 유지 + 대규모 데이터(300건+) & 네이버·구글 통합 검색 엔진 연동</p>
+        <h2>🏛️ 대규모 상권 8대 그룹 뷰포트 큐레이션 맵</h2>
+        <p>수만 건의 대용량 데이터를 실시간 뷰포트 영역 내에서 8대 그룹별 필터링 및 클러스터링으로 고속 렌더링</p>
     </div>
 
-    <!-- 카카오 지도 영역 -->
+    <!-- 지도 영역 -->
     <div id="map"></div>
 
-    <!-- 기존 카테고리 및 '인기추천' 필터 복원 -->
+    <!-- 8대 그룹 필터 및 상태 바 -->
     <div class="map-control-bar">
-        <button class="gps-btn" onclick="sortByMyPosition()">📍 내 위치 기준 가까운 순 정렬</button>
+        <div class="status-indicator" id="status-text">📊 대규모 상권 데이터 로딩 중...</div>
         <div class="filter-buttons">
-            <button class="filter-btn active" onclick="filterCategory('all', event)">전체</button>
-            <button class="filter-btn" onclick="filterCategory('hot', event)">🔥 인기추천</button>
-            <button class="filter-btn" onclick="filterCategory('fast', event)">패스트푸드</button>
-            <button class="filter-btn" onclick="filterCategory('salad', event)">샐러드/포케</button>
-            <button class="filter-btn" onclick="filterCategory('cafe', event)">카페</button>
-            <button class="filter-btn" onclick="filterCategory('meal', event)">한식</button>
-            <button class="filter-btn" onclick="filterCategory('chineses', event)">중식</button>
-            <button class="filter-btn" onclick="filterCategory('japanese', event)">일식</button>
-            <button class="filter-btn" onclick="filterCategory('family', event)">고깃집/회식</button>
+            <button class="filter-btn active" onclick="filterGroup('all', event)">전체보기</button>
+            <button class="filter-btn" onclick="filterGroup('1', event)">1.한식·육류</button>
+            <button class="filter-btn" onclick="filterGroup('2', event)">2.치킨·피자</button>
+            <button class="filter-btn" onclick="filterGroup('3', event)">3.일식·돈가스</button>
+            <button class="filter-btn" onclick="filterGroup('4', event)">4.중식</button>
+            <button class="filter-btn" onclick="filterGroup('5', event)">5.패스트푸드</button>
+            <button class="filter-btn" onclick="filterGroup('6', event)">6.분식</button>
+            <button class="filter-btn" onclick="filterGroup('7', event)">7.서양식·아시안</button>
+            <button class="filter-btn" onclick="filterGroup('8', event)">8.카페·디저트</button>
         </div>
     </div>
 
-    <!-- 상세 정보 카드 목록 -->
+    <!-- 카드 리스트 영역 -->
     <div class="card-grid" id="card-container">
-        <div class="loading-box">🔄 데이터를 불러오는 중입니다...</div>
+        <div class="loading-box">🔄 대규모 데이터셋을 비동기로 로드하는 중입니다...</div>
     </div>
 </div>
 
 <script>
-    let masterFranchiseData = [];
-
-    // 다양한 상호 및 카테고리별 고유 대표 이미지 풀 매핑
-    const sampleImages = [
-        'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80',
-        'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=200&q=80',
-        'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=200&q=80',
-        'https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=200&q=80',
-        'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=200&q=80',
-        'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=200&q=80',
-        'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=200&q=80',
-        'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=200&q=80'
-    ];
-
-    function generateMassiveData() {
-        const baseItems = [
-            { id: 1, category: 'fast', isHot: true, badge: '패스트푸드', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', tip: '위생등급 매우우수', lat: 37.5045, lng: 127.0489, image: sampleImages[0], searchEngine: 'naver' },
-            { id: 2, category: 'fast', isHot: false, badge: '패스트푸드', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', tip: '통새우와퍼 인기', lat: 37.5049, lng: 127.0482, image: sampleImages[1], searchEngine: 'google' }, 
-            { id: 3, category: 'salad', isHot: true, badge: '샐러드/포케', badgeClass: 'badge-salad', name: '포케올데이 선릉역점', loc: '서울 강남구 언주로 415', tip: '신선한 해산물 포케', lat: 37.5032, lng: 127.0441, image: sampleImages[2], searchEngine: 'naver' },
-            { id: 4, category: 'cafe', isHot: true, badge: '카페', badgeClass: 'badge-cafe', name: '스타벅스 선릉역점', loc: '서울 강남구 테헤란로 334', tip: '대형 휴게음식점', lat: 37.5038, lng: 127.0495, image: sampleImages[3], searchEngine: 'google' },
-            { id: 5, category: 'meal', isHot: true, badge: '한식', badgeClass: 'badge-meal', name: '북창동순두부 선릉2호점', loc: '서울 강남구 선릉로82길 15', tip: '갓 지은 돌솥밥과 찌개', lat: 37.5031, lng: 127.0485, image: sampleImages[4], searchEngine: 'naver' },
-            { id: 6, category: 'chineses', isHot: true, badge: '중식', badgeClass: 'badge-chineses', name: '홍콩반점0410 선릉점', loc: '서울 강남구 테헤란로 325', tip: '탕수육 맛집', lat: 37.5042, lng: 127.0470, image: sampleImages[5], searchEngine: 'naver' },
-            { id: 7, category: 'japanese', isHot: true, badge: '일식', badgeClass: 'badge-japanese', name: '스바루 일식 전문점', loc: '서울 강남구 선릉로 420', tip: '수제 메밀소바 및 카츠', lat: 37.5050, lng: 127.0470, image: sampleImages[6], searchEngine: 'google' },
-            { id: 8, category: 'family', isHot: true, badge: '고깃집/회식', badgeClass: 'badge-family', name: '선릉역 삼겹살 명가', loc: '서울 강남구 역삼로 305', tip: '숙성 생고기 전문', lat: 37.5015, lng: 127.0455, image: sampleImages[7], searchEngine: 'naver' }
-        ];
-
-        masterFranchiseData = [...baseItems];
-        let idCounter = 9;
-        const categories = ['fast', 'salad', 'cafe', 'meal', 'chineses', 'japanese', 'family'];
-        const badges = [
-            { badge: '패스트푸드', class: 'badge-fast' },
-            { badge: '샐러드/포케', class: 'badge-salad' },
-            { badge: '카페', class: 'badge-cafe' },
-            { badge: '한식', class: 'badge-meal' },
-            { badge: '중식', class: 'badge-chineses' },
-            { badge: '일식', class: 'badge-japanese' },
-            { badge: '고깃집/회식', class: 'badge-family' }
-        ];
-
-        // 대규모 데이터를 위해 300건 이상 생성하되 각기 다른 무작위 대표 이미지 분배
-        for (let i = 0; i < 300; i++) {
-            const randLatOffset = (Math.random() - 0.5) * 0.02;
-            const randLngOffset = (Math.random() - 0.5) * 0.02;
-            const catObj = badges[Math.floor(Math.random() * badges.length)];
-            const assignedImg = sampleImages[i % sampleImages.length];
-            
-            masterFranchiseData.push({
-                id: idCounter++,
-                category: categories[Math.floor(Math.random() * categories.length)],
-                isHot: Math.random() > 0.75, // 인기추천 매장 비율 유지
-                badge: catObj.badge,
-                badgeClass: catObj.class,
-                name: `선릉역 프랜차이즈점 #${idCounter}`,
-                loc: `서울 강남구 테헤란로 ${300 + (idCounter % 80)}`,
-                tip: '공공데이터 표준 등록 매장',
-                lat: 37.5045 + randLatOffset,
-                lng: 127.0485 + randLngOffset,
-                image: assignedImg,
-                searchEngine: idCounter % 2 === 0 ? 'naver' : 'google'
-            });
-        }
-    }
-
+    let massiveDataset = []; // 수만 건의 대규모 데이터 원본 보관소
     let map;
     let clusterer;
-    let currentCenter = { lat: 37.5045, lng: 127.0485 };
+    let currentGroup = 'all';
     let currentOverlay = null;
 
-    function initMap() {
-        generateMassiveData();
+    // 8대 그룹 정의 메타데이터
+    const groupMeta = {
+        '1': { name: '1.한식·육류', badgeClass: 'badge-group-1' },
+        '2': { name: '2.치킨·피자', badgeClass: 'badge-group-2' },
+        '3': { name: '3.일식·돈가스', badgeClass: 'badge-group-3' },
+        '4': { name: '4.중식', badgeClass: 'badge-group-4' },
+        '5': { name: '5.패스트푸드', badgeClass: 'badge-group-5' },
+        '6': { name: '6.분식', badgeClass: 'badge-group-6' },
+        '7': { name: '7.서양식·아시안', badgeClass: 'badge-group-7' },
+        '8': { name: '8.카페·디저트', badgeClass: 'badge-group-8' }
+    };
 
+    function initMap() {
         const mapContainer = document.getElementById('map');
         const mapOption = {
-            center: new kakao.maps.LatLng(currentCenter.lat, currentCenter.lng),
-            level: 4
+            center: new kakao.maps.LatLng(37.5045, 127.0485),
+            level: 5
         };
         map = new kakao.maps.Map(mapContainer, mapOption);
-        
+
+        clusterer = new kakao.maps.MarkerClusterer({
+            map: map,
+            averageCenter: true,
+            minLevel: 6
+        });
+
+        // 뷰포트(이동/확대·축소) 변경 시 마커 및 리스트 자동 동기화
+        kakao.maps.event.addListener(map, 'bounds_changed', handleViewportRender);
         kakao.maps.event.addListener(map, 'click', function() {
             if (currentOverlay) {
                 currentOverlay.setMap(null);
@@ -332,147 +242,124 @@
             }
         });
 
-        clusterer = new kakao.maps.MarkerClusterer({
-            map: map,
-            averageCenter: true,
-            minLevel: 5
-        });
-
-        updateAllDistances(currentCenter.lat, currentCenter.lng);
-        applyCurrentFilterAndRender();
+        fetchMassiveDataset();
     }
 
-    // 네이버 및 구글 통합 검색 연결 로직
-    function getSearchLink(item) {
-        const query = encodeURIComponent(`${item.name} ${item.loc}`);
-        if (item.searchEngine === 'google') {
-            return `https://www.google.com/search?q=${query}`;
-        } else {
-            return `https://search.naver.com/search.naver?query=${query}`;
-        }
+    // 대규모 데이터셋 비동기 적재 (실무에서는 백엔드 API / 대용량 스트림 연동)
+    async function fetchMassiveDataset() {
+        document.getElementById('status-text').innerText = '⏳ 대규모 데이터셋(15,000건) 인덱싱 및 그룹 매핑 중...';
+        
+        setTimeout(() => {
+            massiveDataset = generateMockMassiveData(15000);
+            document.getElementById('status-text').innerText = `✅ 총 ${massiveDataset.length.toLocaleString()}건 적재 완료 (8대 그룹 분류 적용)`;
+            handleViewportRender();
+        }, 400);
     }
 
-    function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3;
-        const φ1 = lat1 * Math.PI/180;
-        const φ2 = lat2 * Math.PI/180;
-        const Δφ = (lat2-lat1) * Math.PI/180;
-        const Δλ = (lon2-lon1) * Math.PI/180;
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                  Math.cos(φ1) * Math.cos(φ2) *
-                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-    }
+    // 대규모 테스트용 8대 그룹 가상 데이터 생성기
+    function generateMockMassiveData(count) {
+        const groupKeys = Object.keys(groupMeta);
+        const results = [];
+        const baseLat = 37.5045;
+        const baseLng = 127.0485;
 
-    function updateAllDistances(lat, lng) {
-        masterFranchiseData.forEach(item => {
-            item.distance = getDistance(lat, lng, item.lat, item.lng);
-        });
-    }
+        for (let i = 1; i <= count; i++) {
+            const latOffset = (Math.random() - 0.5) * 0.04;
+            const lngOffset = (Math.random() - 0.5) * 0.05;
+            const gKey = groupKeys[Math.floor(Math.random() * groupKeys.length)];
 
-    function sortByMyPosition() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
-                currentCenter = { lat: userLat, lng: userLng };
-                
-                const moveLatLon = new kakao.maps.LatLng(userLat, userLng);
-                map.setCenter(moveLatLon);
-
-                updateAllDistances(userLat, userLng);
-                masterFranchiseData.sort((a, b) => a.distance - b.distance);
-
-                applyCurrentFilterAndRender();
-            }, function() {
-                alert('위치 정보를 가져올 수 없습니다.');
+            results.push({
+                id: i,
+                name: `상권프랜차이즈점_${i}`,
+                groupId: gKey,
+                groupName: groupMeta[gKey].name,
+                badgeClass: groupMeta[gKey].badgeClass,
+                loc: `서울특별시 강남구 테헤란로 ${i % 500 + 1}길`,
+                phone: `02-${Math.floor(Math.random()*800+200)}-${Math.floor(Math.random()*9000+1000)}`,
+                lat: baseLat + latOffset,
+                lng: baseLng + lngOffset,
+                url: `https://map.kakao.com/link/search/상권 매장 ${i}`
             });
-        } else {
-            alert('위치 정보를 지원하지 않는 브라우저입니다.');
         }
+        return results;
     }
 
-    function renderMarkersAndCluster(data) {
-        clusterer.clear();
+    // [핵심] 뷰포트 내 가시 데이터 추출 및 8대 그룹 필터링 적용 렌더러
+    function handleViewportRender() {
+        if (massiveDataset.length === 0) return;
 
-        const markers = data.map((item) => {
+        const bounds = map.getBounds();
+
+        // 1단계: 뷰포트 영역 및 선택된 8대 그룹 조건으로 필터링
+        const visibleData = massiveDataset.filter(item => {
+            if (currentGroup !== 'all' && item.groupId !== currentGroup) {
+                return false;
+            }
+            const coords = new kakao.maps.LatLng(item.lat, item.lng);
+            return bounds.contain(coords);
+        });
+
+        // 2단계: 클러스터러 마커 갱신
+        clusterer.clear();
+        const markers = visibleData.map(item => {
             const coords = new kakao.maps.LatLng(item.lat, item.lng);
             const marker = new kakao.maps.Marker({ position: coords });
 
-            const targetUrl = getSearchLink(item);
-
             const content = document.createElement('div');
             content.className = 'soft-box-bubble';
-            content.innerHTML = `
-                <span class="shop-name">${item.name}</span>
-                <span class="shop-info">거리: ${Math.round(item.distance)}m (${item.tip})</span>
-            `;
-
-            content.onclick = function(e) {
+            content.innerHTML = `<strong>${item.name}</strong><br><span style="color:#059669; font-size:11px;">📞 ${item.phone}</span>`;
+            
+            content.onclick = (e) => {
                 e.stopPropagation();
-                window.open(targetUrl, '_blank');
+                window.open(item.url, '_blank');
             };
 
-            const customOverlay = new kakao.maps.CustomOverlay({
+            const overlay = new kakao.maps.CustomOverlay({
                 position: coords,
                 content: content,
-                yAnchor: 1.15
+                yAnchor: 1.3
             });
 
-            kakao.maps.event.addListener(marker, 'click', function() {
-                if (currentOverlay) {
-                    currentOverlay.setMap(null);
-                }
-                customOverlay.setMap(map);
-                currentOverlay = customOverlay;
+            kakao.maps.event.addListener(marker, 'click', () => {
+                if (currentOverlay) currentOverlay.setMap(null);
+                overlay.setMap(map);
+                currentOverlay = overlay;
             });
 
             return marker;
         });
 
         clusterer.addMarkers(markers);
+
+        // 3단계: 하단 리스트 카드 렌더링 (브라우저 성능 최적화를 위해 가시 데이터 중 상위 100건만 슬라이싱)
+        renderCards(visibleData.slice(0, 100), visibleData.length);
     }
 
-    function renderCards(data) {
+    function renderCards(data, totalVisibleCount) {
         const container = document.getElementById('card-container');
         container.innerHTML = '';
 
-        if(data.length === 0) {
-            container.innerHTML = '<div class="loading-box">조건에 해당하는 매장이 없습니다.</div>';
+        if (data.length === 0) {
+            container.innerHTML = '<div class="loading-box">현재 지도 화면 내에 조건에 일치하는 상권 데이터가 없습니다. 지도를 이동해 보세요.</div>';
             return;
         }
 
-        // 렌더링 제한을 풀고 대규모 데이터를 전부 출력
+        document.getElementById('status-text').innerText = `👁️ 현재 화면 가시 데이터: 총 ${totalVisibleCount.toLocaleString()}건 (상위 ${data.length}건 표출 중)`;
+
         data.forEach(item => {
-            const distText = item.distance >= 1000 
-                ? (item.distance / 1000).toFixed(1) + ' km' 
-                : Math.round(item.distance) + ' m';
-
-            const imgSrc = item.image;
-            const targetUrl = getSearchLink(item);
-
             const card = document.createElement('div');
             card.className = 'fran-card';
-            
-            card.onclick = function() {
-                window.open(targetUrl, '_blank');
-            };
+            card.onclick = () => window.open(item.url, '_blank');
 
             card.innerHTML = `
-                <div class="fran-img-wrapper">
-                    <img src="${imgSrc}" class="fran-img" alt="${item.name}">
-                </div>
                 <div class="fran-content">
                     <div>
                         <div class="badge-group">
-                            <span class="badge ${item.badgeClass}">${item.badge}</span>
-                            ${item.isHot ? '<span class="badge badge-hot">🔥 인기추천</span>' : ''}
-                            <span class="badge" style="background:#e2e8f0; color:#334155;">🔍 ${item.searchEngine.toUpperCase()}</span>
+                            <span class="badge ${item.badgeClass}">🏢 ${item.groupName}</span>
                         </div>
                         <h3>${item.name}</h3>
                         <p class="fran-loc">📍 ${item.loc}</p>
-                        <p class="fran-dist">🏃 약 ${distText} · ${item.tip}</p>
+                        <p class="fran-phone">📞 ${item.phone}</p>
                     </div>
                 </div>
             `;
@@ -480,42 +367,17 @@
         });
     }
 
-    function applyCurrentFilterAndRender() {
-        const activeBtn = document.querySelector('.filter-btn.active');
-        let currentCategory = 'all';
-        if(activeBtn) {
-            const text = activeBtn.innerText;
-            if(text.includes('인기추천')) currentCategory = 'hot';
-            else if(text.includes('패스트푸드')) currentCategory = 'fast';
-            else if(text.includes('샐러드')) currentCategory = 'salad';
-            else if(text.includes('카페')) currentCategory = 'cafe';
-            else if(text.includes('한식')) currentCategory = 'meal';
-            else if(text.includes('중식')) currentCategory = 'chineses';
-            else if(text.includes('일식')) currentCategory = 'japanese';
-            else if(text.includes('고깃집')) currentCategory = 'family';
-        }
+    // 8대 그룹 필터 이벤트 핸들러
+    function filterGroup(groupKey, event) {
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        if (event) event.target.classList.add('active');
 
-        let targetData = masterFranchiseData;
-        if(currentCategory === 'hot') {
-            targetData = masterFranchiseData.filter(item => item.isHot);
-        } else if(currentCategory !== 'all') {
-            targetData = masterFranchiseData.filter(item => item.category === currentCategory);
-        }
-
-        renderCards(targetData);
-        renderMarkersAndCluster(targetData);
-    }
-
-    function filterCategory(category, event) {
-        const buttons = document.querySelectorAll('.filter-btn');
-        buttons.forEach(btn => btn.classList.remove('active'));
-        if(event) event.target.classList.add('active');
-
-        applyCurrentFilterAndRender();
+        currentGroup = groupKey;
+        handleViewportRender();
     }
 
     window.onload = function() {
-        if(typeof kakao !== 'undefined' && kakao.maps) {
+        if (typeof kakao !== 'undefined' && kakao.maps) {
             kakao.maps.load(initMap);
         }
     };
