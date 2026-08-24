@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵 (완벽 수정 버전)</title>
+    <title>선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵</title>
     <!-- 카카오 지도 API 및 클러스터러 라이브러리 -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=clusterer"></script>
     <style>
@@ -86,14 +86,14 @@
             overflow-y: auto;
             padding-right: 4px;
         }
-        /* 카드 레이아웃 및 완벽한 원형 썸네일 */
+        /* 완벽한 원형 썸네일 카드로 수정 */
         .fran-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             display: flex;
             align-items: center;
-            padding: 10px;
+            padding: 12px;
             gap: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             transition: transform 0.2s, box-shadow 0.2s;
@@ -111,6 +111,9 @@
             overflow: hidden;
             background-color: #f1f5f9;
             border: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .fran-img {
             width: 100%;
@@ -172,7 +175,7 @@
         .circle-bubble {
             position: relative;
             background: #ffffff;
-            border: 2px solid #2563eb;
+            border: 3px solid #2563eb;
             width: 110px;
             height: 110px;
             border-radius: 50%;
@@ -181,16 +184,17 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            padding: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            padding: 8px;
             box-sizing: border-box;
             cursor: pointer;
             left: -55px;
             bottom: 55px;
-            transition: transform 0.2s;
+            transition: transform 0.2s, background-color 0.2s;
         }
         .circle-bubble:hover {
-            transform: scale(1.05);
+            transform: scale(1.08);
+            background-color: #f8fafc;
         }
         .circle-bubble .shop-name {
             font-size: 11px;
@@ -225,7 +229,7 @@
 <div class="franchise-hub-container">
     <div class="hub-header">
         <h2>🏛️ 선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵</h2>
-        <p>완전한 원형 썸네일 및 정원형 지도 오버레이 적용 버전</p>
+        <p>완전한 원형 썸네일, 정원형 클릭형 오버레이 및 누락 없는 데이터셋 반영</p>
     </div>
 
     <!-- 카카오 지도 영역 -->
@@ -285,7 +289,7 @@
     }
 
     function loadCurationData() {
-        // 전체 데이터셋 로드
+        // 전체 원본 데이터셋 정의
         franchiseData = [
             { id: 1, category: 'fast', isHot: true, badge: '패스트푸드', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', tip: '위생등급 매우우수', lat: 37.5045, lng: 127.0489, image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/31191024/home' },
             { id: 2, category: 'fast', isHot: false, badge: '패스트푸드', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', tip: '통새우와퍼 인기', lat: 37.5049, lng: 127.0482, image: '', link: '' },
@@ -309,6 +313,7 @@
         if (item.link && item.link.trim() !== '') {
             return item.link;
         }
+        // 네이버 모바일 통합 검색 결과로 안전하게 대체 연결
         return `https://m.search.naver.com/search.naver?query=${encodeURIComponent(item.name)}`;
     }
 
@@ -344,33 +349,8 @@
                 calculateDistances(userLat, userLng);
                 franchiseData.sort((a, b) => a.distance - b.distance);
 
-                // 현재 활성화된 필터 상태 유지하며 정렬 반영
-                const activeBtn = document.querySelector('.filter-btn.active');
-                let currentCategory = 'all';
-                if(activeBtn) {
-                    const text = activeBtn.innerText;
-                    if(text.includes('인기추천')) currentCategory = 'hot';
-                    else if(text.includes('패스트푸드')) currentCategory = 'fast';
-                    else if(text.includes('샐러드')) currentCategory = 'salad';
-                    else if(text.includes('카페')) currentCategory = 'cafe';
-                    else if(text.includes('한식')) currentCategory = 'meal';
-                    else if(text.includes('중식')) currentCategory = 'chineses';
-                    else if(text.includes('일식')) currentCategory = 'japanese';
-                    else if(text.includes('고깃집')) currentCategory = 'family';
-                }
-
-                if(currentCategory === 'all') {
-                    renderCards(franchiseData);
-                    renderMarkersAndCluster(franchiseData);
-                } else if(currentCategory === 'hot') {
-                    const filtered = franchiseData.filter(item => item.isHot);
-                    renderCards(filtered);
-                    renderMarkersAndCluster(filtered);
-                } else {
-                    const filtered = franchiseData.filter(item => item.category === currentCategory);
-                    renderCards(filtered);
-                    renderMarkersAndCluster(filtered);
-                }
+                // 현재 활성화된 필터 유지하며 렌더링
+                applyCurrentFilterAndRender();
             }, function() {
                 alert('위치 정보를 가져올 수 없습니다.');
             });
@@ -388,7 +368,7 @@
 
             const targetUrl = getValidLink(item);
 
-            // 완전한 정원형(Circle) 커스텀 오버레이 생성
+            // 완전한 정원형(Circle) 커스텀 오버레이 생성 및 클릭 이벤트 보장
             const content = document.createElement('div');
             content.className = 'circle-bubble';
             content.innerHTML = `
@@ -396,7 +376,8 @@
                 <div class="shop-dist">${Math.round(item.distance)}m</div>
             `;
 
-            content.onclick = function() {
+            content.onclick = function(e) {
+                e.stopPropagation();
                 window.open(targetUrl, '_blank');
             };
 
@@ -465,23 +446,41 @@
         });
     }
 
+    function applyCurrentFilterAndRender() {
+        const activeBtn = document.querySelector('.filter-btn.active');
+        let currentCategory = 'all';
+        if(activeBtn) {
+            const text = activeBtn.innerText;
+            if(text.includes('인기추천')) currentCategory = 'hot';
+            else if(text.includes('패스트푸드')) currentCategory = 'fast';
+            else if(text.includes('샐러드')) currentCategory = 'salad';
+            else if(text.includes('카페')) currentCategory = 'cafe';
+            else if(text.includes('한식')) currentCategory = 'meal';
+            else if(text.includes('중식')) currentCategory = 'chineses';
+            else if(text.includes('일식')) currentCategory = 'japanese';
+            else if(text.includes('고깃집')) currentCategory = 'family';
+        }
+
+        if(currentCategory === 'all') {
+            renderCards(franchiseData);
+            renderMarkersAndCluster(franchiseData);
+        } else if(currentCategory === 'hot') {
+            const filtered = franchiseData.filter(item => item.isHot);
+            renderCards(filtered);
+            renderMarkersAndCluster(filtered);
+        } else {
+            const filtered = franchiseData.filter(item => item.category === currentCategory);
+            renderCards(filtered);
+            renderMarkersAndCluster(filtered);
+        }
+    }
+
     function filterCategory(category, event) {
         const buttons = document.querySelectorAll('.filter-btn');
         buttons.forEach(btn => btn.classList.remove('active'));
         if(event) event.target.classList.add('active');
 
-        if(category === 'all') {
-            renderCards(franchiseData);
-            renderMarkersAndCluster(franchiseData);
-        } else if(category === 'hot') {
-            const filtered = franchiseData.filter(item => item.isHot);
-            renderCards(filtered);
-            renderMarkersAndCluster(filtered);
-        } else {
-            const filtered = franchiseData.filter(item => item.category === category);
-            renderCards(filtered);
-            renderMarkersAndCluster(filtered);
-        }
+        applyCurrentFilterAndRender();
     }
 
     window.onload = function() {
