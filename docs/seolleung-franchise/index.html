@@ -181,7 +181,7 @@
 </div>
 
 <script>
-    // 선릉·역삼 일대 풍성한 프랜차이즈 실 데이터셋 (이미지, 상세링크 포함)
+    // 선릉·역삼 일대 프랜차이즈 풀 데이터셋
     let franchiseData = [
         {
             id: 1,
@@ -286,7 +286,7 @@
             category: 'meal',
             badge: '한식/국밥',
             badgeClass: 'badge-meal',
-            name: '국밥대장 역삼점 (프랜차이즈)',
+            name: '국밥대장 역삼점',
             loc: '서울 강남구 역삼로 215',
             tip: '얼큰한 국물로 해장하기 좋은 직장인 성지',
             menu: '얼큰 돼지국밥, 수육백반',
@@ -299,7 +299,7 @@
 
     let map;
     let markers = [];
-    let infowindows = []; // 열린 인포윈도우 추적용
+    let infowindows = []; // 열린 인포윈도우 관리 배열
     let currentCenter = { lat: 37.5045, lng: 127.0485 }; // 선릉역 기본 중심
 
     // 지도 초기화
@@ -317,9 +317,9 @@
         renderMarkers(franchiseData);
     }
 
-    // 두 지점 간 거리 계산 (Haversine Formula, 미터 단위 반환)
+    // 거리 계산 공식 (Haversine)
     function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // metres
+        const R = 6371e3;
         const φ1 = lat1 * Math.PI/180;
         const φ2 = lat2 * Math.PI/180;
         const Δφ = (lat2-lat1) * Math.PI/180;
@@ -329,18 +329,16 @@
                   Math.cos(φ1) * Math.cos(φ2) *
                   Math.sin(Δλ/2) * Math.sin(Δλ/2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
         return R * c;
     }
 
-    // 각 데이터에 현재 위치 기준 거리 계산 반영
     function calculateDistances(lat, lng) {
         franchiseData.forEach(item => {
             item.distance = getDistance(lat, lng, item.lat, item.lng);
         });
     }
 
-    // 내 위치 기준으로 정렬
+    // 1번 요구사항: 내 위치 기준 가까운 순 정렬
     function sortByMyPosition() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
@@ -349,18 +347,15 @@
                 
                 currentCenter = { lat: userLat, lng: userLng };
                 
-                // 지도 중심 이동
                 const moveLatLon = new kakao.maps.LatLng(userLat, userLng);
                 map.setCenter(moveLatLon);
 
-                // 거리 계산 후 오름차순 정렬
                 calculateDistances(userLat, userLng);
                 franchiseData.sort((a, b) => a.distance - b.distance);
 
-                // 재렌더링
                 renderCards(franchiseData);
                 renderMarkers(franchiseData);
-                alert('📍 내 위치(GPS)를 기준으로 가장 가까운 곳부터 정렬되었습니다!');
+                alert('📍 내 위치 기준 가장 가까운 매장순으로 정렬되었습니다!');
             }, function(error) {
                 alert('위치 정보를 가져올 수 없습니다. 브라우저 위치 권한을 확인해주세요.');
             });
@@ -369,36 +364,35 @@
         }
     }
 
-    // 마커 생성 및 클릭 이벤트 설정
+    // 마커 렌더링 및 3, 4번 요구사항(인포윈도우 토글 및 상세 이동) 반영
     function renderMarkers(data) {
+        // 기존 마커 초기화
         markers.forEach(marker => marker.setMap(null));
         markers = [];
         infowindows = [];
 
-        data.forEach((item, index) => {
+        data.forEach((item) => {
             const coords = new kakao.maps.LatLng(item.lat, item.lng);
             const marker = new kakao.maps.Marker({
                 map: map,
                 position: coords
             });
 
-            // 상세페이지로 이동하는 링크 포함 인포윈도우
+            // 4번 요구사항: 지도 위 마커 클릭 시 정보 표시 및 상세페이지 이동 버튼 제공
             const content = `
-                <div style="padding:10px;font-size:12px;width:200px;text-align:center;font-family:sans-serif;">
-                    <strong>${item.name}</strong><br>
-                    <span style="color:#64748b;font-size:11px;">거리: ${(item.distance >= 1000 ? (item.distance/1000).toFixed(1)+'km' : Math.round(item.distance)+'m')}</span><br>
-                    <a href="${item.link}" target="_blank" style="display:inline-block;margin-top:6px;background:#2563eb;color:#fff;padding:4px 8px;border-radius:4px;text-decoration:none;font-size:11px;">상세 페이지 이동 ➔</a>
+                <div style="padding:10px;font-size:12px;width:190px;text-align:center;font-family:sans-serif;background:#fff;">
+                    <strong style="font-size:13px;color:#0f172a;">${item.name}</strong><br>
+                    <span style="color:#0284c7;font-size:11px;font-weight:600;">거리: ${item.distance >= 1000 ? (item.distance/1000).toFixed(1)+'km' : Math.round(item.distance)+'m'}</span><br>
+                    <a href="${item.link}" target="_blank" style="display:inline-block;margin-top:6px;background:#2563eb;color:#fff;padding:4px 10px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:600;">상세 페이지 이동 ➔</a>
                 </div>
             `;
             
-            const infowindow = new kakao.maps.InfoWindow({ content: content });
+            const infowindow = new kakao.maps.InfoWindow({ content: content, removable: true });
 
-            // 마커 클릭 시: 기존 열려있던 인포윈도우 모두 닫고 현재 것만 오픈
+            // 3번 요구사항: 다른 마커를 클릭하면 이전 타이틀(인포윈도우)은 자동 삭제(닫기)
             kakao.maps.event.addListener(marker, 'click', function() {
-                infowindows.forEach(iw => iw.close());
-                infowindow.open(map, marker);
-                
-                // 연동된 카드로 스크롤 이동 효과 줄 수도 있음
+                infowindows.forEach(iw => iw.close()); // 열려있는 모든 인포윈도우 닫기
+                infowindow.open(map, marker);         // 현재 클릭한 것만 열기
             });
 
             markers.push(marker);
@@ -406,7 +400,7 @@
         });
     }
 
-    // 카드 렌더링 함수 (클릭 시 상세 페이지로 이동)
+    // 2번, 3번 요구사항: 대표 사진 표시 및 카드 클릭 시 상세 페이지 이동
     function renderCards(data) {
         const container = document.getElementById('card-container');
         container.innerHTML = '';
@@ -418,7 +412,8 @@
 
             const card = document.createElement('div');
             card.className = 'fran-card';
-            // 카드 클릭 시 상세 페이지로 이동
+            
+            // 3번 요구사항: 카드를 클릭하면 기본으로 상세 페이지로 이동
             card.onclick = function() {
                 window.open(item.link, '_blank');
             };
