@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵 (최종 완성 버전)</title>
+    <title>선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵 (완벽 수정 버전)</title>
     <!-- 카카오 지도 API 및 클러스터러 라이브러리 -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=clusterer"></script>
     <style>
@@ -86,7 +86,7 @@
             overflow-y: auto;
             padding-right: 4px;
         }
-        /* 좌측 원형 썸네일 카드 레이아웃 */
+        /* 카드 레이아웃 및 완벽한 원형 썸네일 */
         .fran-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -168,44 +168,49 @@
             color: #0284c7;
         }
 
-        /* 커스텀 예쁜 말풍선 스타일 */
-        .custom-bubble {
+        /* 완전히 동그란 모양(Circle)의 지도 오버레이 디자인 */
+        .circle-bubble {
             position: relative;
             background: #ffffff;
-            border: 1px solid #cbd5e1;
-            padding: 10px 14px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            border: 2px solid #2563eb;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            font-family: 'Pretendard', sans-serif;
-            width: 180px;
-            bottom: 35px;
-            left: -90px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 10px;
+            box-sizing: border-box;
+            cursor: pointer;
+            left: -55px;
+            bottom: 55px;
+            transition: transform 0.2s;
         }
-        .custom-bubble:after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 8px 8px 0;
-            border-style: solid;
-            border-color: #ffffff transparent;
-            display: block;
-            width: 0;
+        .circle-bubble:hover {
+            transform: scale(1.05);
         }
-        .custom-bubble:before {
-            content: '';
-            position: absolute;
-            bottom: -9px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 9px 9px 0;
-            border-style: solid;
-            border-color: #cbd5e1 transparent;
-            display: block;
-            width: 0;
+        .circle-bubble .shop-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1e293b;
+            text-decoration: underline;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-height: 1.2;
+            margin-bottom: 2px;
         }
+        .circle-bubble .shop-dist {
+            font-size: 10px;
+            font-weight: 600;
+            color: #0284c7;
+        }
+
         .loading-box {
             text-align: center;
             grid-column: 1 / -1;
@@ -220,7 +225,7 @@
 <div class="franchise-hub-container">
     <div class="hub-header">
         <h2>🏛️ 선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵</h2>
-        <p>원형 썸네일, 예쁜 말풍선 링크 및 풍부한 상권 데이터 연동 버전</p>
+        <p>완전한 원형 썸네일 및 정원형 지도 오버레이 적용 버전</p>
     </div>
 
     <!-- 카카오 지도 영역 -->
@@ -253,7 +258,7 @@
     let map;
     let clusterer;
     let currentCenter = { lat: 37.5045, lng: 127.0485 };
-    let currentOverlay = null; // 현재 열린 커스텀 오버레이(말풍선) 관리
+    let currentOverlay = null;
 
     function initMap() {
         const mapContainer = document.getElementById('map');
@@ -263,7 +268,6 @@
         };
         map = new kakao.maps.Map(mapContainer, mapOption);
         
-        // 지도 여백 클릭 시 열려있는 말풍선 닫기
         kakao.maps.event.addListener(map, 'click', function() {
             if (currentOverlay) {
                 currentOverlay.setMap(null);
@@ -281,7 +285,7 @@
     }
 
     function loadCurationData() {
-        // 풍부한 전체 데이터셋 구성
+        // 전체 데이터셋 로드
         franchiseData = [
             { id: 1, category: 'fast', isHot: true, badge: '패스트푸드', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', tip: '위생등급 매우우수', lat: 37.5045, lng: 127.0489, image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/31191024/home' },
             { id: 2, category: 'fast', isHot: false, badge: '패스트푸드', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', tip: '통새우와퍼 인기', lat: 37.5049, lng: 127.0482, image: '', link: '' },
@@ -301,13 +305,11 @@
         renderMarkersAndCluster(franchiseData);
     }
 
-    // 유효한 링크가 없을 경우 네이버/구글 통합 검색으로 안전하게 유도하는 함수
     function getValidLink(item) {
         if (item.link && item.link.trim() !== '') {
             return item.link;
         }
-        // 링크가 없을 경우 검색엔진 통합 검색 결과로 연결
-        return `https://m.search.naver.com/search.naver?query=${encodeURIComponent(item.name)}`
+        return `https://m.search.naver.com/search.naver?query=${encodeURIComponent(item.name)}`;
     }
 
     function getDistance(lat1, lon1, lat2, lon2) {
@@ -342,8 +344,33 @@
                 calculateDistances(userLat, userLng);
                 franchiseData.sort((a, b) => a.distance - b.distance);
 
-                renderCards(franchiseData);
-                renderMarkersAndCluster(franchiseData);
+                // 현재 활성화된 필터 상태 유지하며 정렬 반영
+                const activeBtn = document.querySelector('.filter-btn.active');
+                let currentCategory = 'all';
+                if(activeBtn) {
+                    const text = activeBtn.innerText;
+                    if(text.includes('인기추천')) currentCategory = 'hot';
+                    else if(text.includes('패스트푸드')) currentCategory = 'fast';
+                    else if(text.includes('샐러드')) currentCategory = 'salad';
+                    else if(text.includes('카페')) currentCategory = 'cafe';
+                    else if(text.includes('한식')) currentCategory = 'meal';
+                    else if(text.includes('중식')) currentCategory = 'chineses';
+                    else if(text.includes('일식')) currentCategory = 'japanese';
+                    else if(text.includes('고깃집')) currentCategory = 'family';
+                }
+
+                if(currentCategory === 'all') {
+                    renderCards(franchiseData);
+                    renderMarkersAndCluster(franchiseData);
+                } else if(currentCategory === 'hot') {
+                    const filtered = franchiseData.filter(item => item.isHot);
+                    renderCards(filtered);
+                    renderMarkersAndCluster(filtered);
+                } else {
+                    const filtered = franchiseData.filter(item => item.category === currentCategory);
+                    renderCards(filtered);
+                    renderMarkersAndCluster(filtered);
+                }
             }, function() {
                 alert('위치 정보를 가져올 수 없습니다.');
             });
@@ -361,21 +388,22 @@
 
             const targetUrl = getValidLink(item);
 
-            // 예쁜 커스텀 말풍선 내용 (상호를 누르면 링크 이동)
+            // 완전한 정원형(Circle) 커스텀 오버레이 생성
             const content = document.createElement('div');
-            content.className = 'custom-bubble';
+            content.className = 'circle-bubble';
             content.innerHTML = `
-                <a href="${targetUrl}" target="_blank" style="text-decoration:none; color:#0f172a; display:block;">
-                    <strong style="font-size:13px; color:#2563eb; display:block; margin-bottom:3px; text-decoration:underline;">${item.name}</strong>
-                </a>
-                <span style="color:#0284c7; font-size:11px; font-weight:600;">거리: ${Math.round(item.distance)}m</span><br>
-                <span style="color:#64748b; font-size:10px;">${item.tip}</span>
+                <div class="shop-name">${item.name}</div>
+                <div class="shop-dist">${Math.round(item.distance)}m</div>
             `;
+
+            content.onclick = function() {
+                window.open(targetUrl, '_blank');
+            };
 
             const customOverlay = new kakao.maps.CustomOverlay({
                 position: coords,
                 content: content,
-                yAnchor: 1.1
+                yAnchor: 0.5
             });
 
             kakao.maps.event.addListener(marker, 'click', function() {
