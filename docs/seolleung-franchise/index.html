@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>선릉·역삼 스마트 프랜차이즈 지도 맵</title>
-    <!-- 카카오 지도 API (appkey 자리에 본인의 카카오 개발자 자바스크립트 키를 입력하세요. 테스트용으로 기본 오픈키 사용 시 도메인 등록 필요) -->
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KAKAO_APP_KEY"></script>
+    <!-- 카카오 지도 API (발급받은 JS 키 적용 완료) -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d"></script>
     <style>
         .franchise-hub-container {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -131,11 +131,11 @@
 
     <!-- 카테고리 필터 -->
     <div class="filter-buttons">
-        <button class="filter-btn active" onclick="filterCategory('all')">전체 보기</button>
-        <button class="filter-btn" onclick="filterCategory('fast')">패스트푸드/버거</button>
-        <button class="filter-btn" onclick="filterCategory('salad')">샐러드/다이어트</button>
-        <button class="filter-btn" onclick="filterCategory('cafe')">카페/디저트</button>
-        <button class="filter-btn" onclick="filterCategory('meal')">한식/면요리</button>
+        <button class="filter-btn active" onclick="filterCategory('all', event)">전체 보기</button>
+        <button class="filter-btn" onclick="filterCategory('fast', event)">패스트푸드/버거</button>
+        <button class="filter-btn" onclick="filterCategory('salad', event)">샐러드/다이어트</button>
+        <button class="filter-btn" onclick="filterCategory('cafe', event)">카페/디저트</button>
+        <button class="filter-btn" onclick="filterCategory('meal', event)">한식/면요리</button>
     </div>
 
     <!-- 상세 정보 카드 목록 -->
@@ -239,7 +239,7 @@
 
             // 인포윈도우 추가
             const infowindow = new kakao.maps.InfoWindow({
-                content: `<div style="padding:5px;font-size:12px;font-weight:bold;">${item.name}</div>`
+                content: `<div style="padding:5px;font-size:12px;font-weight:bold;width:150px;text-align:center;">${item.name}</div>`
             });
 
             kakao.maps.event.addListener(marker, 'click', function() {
@@ -274,7 +274,7 @@
     }
 
     // 카테고리 필터링
-    function filterCategory(category) {
+    function filterCategory(category, event) {
         const buttons = document.querySelectorAll('.filter-btn');
         buttons.forEach(btn => btn.classList.remove('active'));
         event.target.classList.add('active');
@@ -294,7 +294,6 @@
         if(typeof kakao !== 'undefined' && kakao.maps) {
             kakao.maps.load(initMap);
         } else {
-            // 키가 없거나 로드 대기 시 기본 카드만 우선 렌더링
             renderCards(franchiseData);
         }
     };
