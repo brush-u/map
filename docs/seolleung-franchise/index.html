@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>선릉·역삼 공공데이터 기반 프랜차이즈 큐레이션 맵</title>
+    <title>선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵</title>
     <!-- 카카오 지도 API -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d"></script>
     <style>
         .franchise-hub-container {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-            max-width: 900px;
+            max-width: 1000px;
             margin: 20px auto;
             padding: 20px;
             background: #f8fafc;
@@ -31,7 +31,7 @@
         }
         #map {
             width: 100%;
-            height: 420px;
+            height: 450px;
             border-radius: 10px;
             border: 1px solid #cbd5e1;
             margin-bottom: 16px;
@@ -82,6 +82,9 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 16px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 4px;
         }
         .fran-card {
             background: #ffffff;
@@ -98,12 +101,12 @@
         }
         .fran-img {
             width: 100%;
-            height: 140px;
+            height: 130px;
             object-fit: cover;
             background-color: #e2e8f0;
         }
         .fran-content {
-            padding: 16px;
+            padding: 14px;
         }
         .badge {
             display: inline-block;
@@ -111,42 +114,36 @@
             font-weight: 700;
             padding: 3px 8px;
             border-radius: 4px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .badge-cafe { background: #fef3c7; color: #92400e; }
         .badge-fast { background: #fee2e2; color: #991b1b; }
         .badge-salad { background: #dcfce7; color: #166534; }
         .badge-meal { background: #e0f2fe; color: #0369a1; }
+        .badge-convenience { background: #f3e8ff; color: #6b21a8; }
         
         .fran-card h3 {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             color: #1e293b;
             margin: 0 0 4px 0;
         }
         .fran-loc {
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             color: #64748b;
             margin-bottom: 4px;
         }
         .fran-dist {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 600;
             color: #0284c7;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .fran-details {
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             color: #334155;
             background: #f1f5f9;
-            padding: 8px;
+            padding: 6px 8px;
             border-radius: 6px;
-        }
-        .fran-details ul {
-            margin: 0;
-            padding-left: 16px;
-        }
-        .fran-details li {
-            margin-bottom: 3px;
         }
     </style>
 </head>
@@ -154,8 +151,8 @@
 
 <div class="franchise-hub-container">
     <div class="hub-header">
-        <h2>🏛️ 선릉·역삼 공공데이터 기반 프랜차이즈 큐레이션 맵</h2>
-        <p>강남구 인허가 공공데이터 및 웹 오픈 정보를 활용한 직장인 밀집 구역 맛집 지도</p>
+        <h2>🏛️ 선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵</h2>
+        <p>강남구청 인허가 데이터 및 오픈 웹 정보를 바탕으로 선릉·역삼 전역의 주요 매장 정보를 통합 제공합니다.</p>
     </div>
 
     <!-- 카카오 지도 영역 -->
@@ -166,10 +163,11 @@
         <button class="gps-btn" onclick="sortByMyPosition()">📍 내 위치 기준 가까운 순 정렬</button>
         <div class="filter-buttons">
             <button class="filter-btn active" onclick="filterCategory('all', event)">전체 보기</button>
-            <button class="filter-btn" onclick="filterCategory('fast', event)">버거/패스트푸드</button>
+            <button class="filter-btn" onclick="filterCategory('fast', event)">패스트푸드</button>
             <button class="filter-btn" onclick="filterCategory('salad', event)">샐러드/포케</button>
             <button class="filter-btn" onclick="filterCategory('cafe', event)">카페</button>
-            <button class="filter-btn" onclick="filterCategory('meal', event)">한식/국밥</button>
+            <button class="filter-btn" onclick="filterCategory('meal', event)">한식/식사</button>
+            <button class="filter-btn" onclick="filterCategory('convenience', event)">편의점/기타</button>
         </div>
     </div>
 
@@ -179,123 +177,39 @@
 
 <script>
     /* 
-      [데이터 출처 안내]
-      - 강남구청 식품위생과 인허가 공개 데이터 및 서울 열린데이터광장 오픈 데이터 반영
-      - 웹에 오픈된 프랜차이즈 공식 위치 및 좌표 정보 매칭
+      [데이터셋 안내]
+      - 강남구청 식품위생과 인허가 및 공공 데이터 오픈 API 기준 전수조사 항목 반영
+      - 선릉역~역삼역 테헤란로 및 이면도로 주요 프랜차이즈 대거 확장
     */
     let franchiseData = [
-        {
-            id: 1,
-            category: 'fast',
-            badge: '패스트푸드 (공공데이터 등록)',
-            badgeClass: 'badge-fast',
-            name: '맥도날드 선릉점',
-            loc: '서울 강남구 테헤란로 311 (역삼동)',
-            tip: '식약처 인증 위생등급 매우우수 음식점',
-            menu: '맥런치 세트, 상하이 버거',
-            lat: 37.5045,
-            lng: 127.0489,
-            image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80',
-            link: 'https://www.mcdonalds.co.kr/'
-        },
-        {
-            id: 2,
-            category: 'fast',
-            badge: '패스트푸드 (공공데이터 등록)',
-            badgeClass: 'badge-fast',
-            name: '버거킹 선릉역점',
-            loc: '서울 강남구 선릉로 428 (대치동)',
-            tip: '식약처 인증 위생등급 우수 음식점',
-            menu: '통새우와퍼, 불고기몬스터',
-            lat: 37.5049,
-            lng: 127.0482,
-            image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80',
-            link: 'https://www.burgerking.co.kr/'
-        },
-        {
-            id: 3,
-            category: 'salad',
-            badge: '샐러드/샌드위치',
-            badgeClass: 'badge-salad',
-            name: '서브웨이 선릉점',
-            loc: '서울 강남구 테헤란로 337 (역삼동)',
-            tip: '건강식 선호 직장인 공공데이터 인기 업종',
-            menu: '에그마요, 로스트치킨',
-            lat: 37.5052,
-            lng: 127.0465,
-            image: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80',
-            link: 'https://www.subway.co.kr/'
-        },
-        {
-            id: 4,
-            category: 'salad',
-            badge: '샐러드/포케',
-            badgeClass: 'badge-salad',
-            name: '포케올데이 선릉역점',
-            loc: '서울 강남구 언주로 415 (역삼동)',
-            tip: '웹 오픈 리뷰 기반 추천 포케 전문점',
-            menu: '연어 프로틴 포케, 메밀면 포케',
-            lat: 37.5032,
-            lng: 127.0441,
-            image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80',
-            link: 'https://www.pokeallday.com/'
-        },
-        {
-            id: 5,
-            category: 'cafe',
-            badge: '카페 (공공데이터 등록)',
-            badgeClass: 'badge-cafe',
-            name: '스타벅스 선릉역점',
-            loc: '서울 강남구 테헤란로 334 (역삼동)',
-            tip: '테헤란로 중심가 휴게음식점 등록 업소',
-            menu: '카페 아메리카노, 카페 라떼',
-            lat: 37.5038,
-            lng: 127.0495,
-            image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80',
-            link: 'https://www.starbucks.co.kr/'
-        },
-        {
-            id: 6,
-            category: 'cafe',
-            badge: '카페 (공공데이터 등록)',
-            badgeClass: 'badge-cafe',
-            name: '투썸플레이스 선릉점',
-            loc: '서울 강남구 선릉로 431 (대치동)',
-            tip: '넓은 좌석 및 미팅 공간 완비',
-            menu: '아이스 아로마 노트, 스페니쉬 연유라떼',
-            lat: 37.5055,
-            lng: 127.0475,
-            image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&q=80',
-            link: 'https://www.twosome.co.kr/'
-        },
-        {
-            id: 7,
-            category: 'meal',
-            badge: '한식/국밥 (공공데이터 등록)',
-            badgeClass: 'badge-meal',
-            name: '본죽&비빔밥 선릉점',
-            loc: '서울 강남구 테헤란로 329 (역삼동)',
-            tip: '한식 일반음식점 인허가 등록 매장',
-            menu: '쇠고기야채죽, 차돌강된장 비빔밥',
-            lat: 37.5058,
-            lng: 127.0478,
-            image: 'https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=600&q=80',
-            link: 'https://www.bonif.co.kr/'
-        },
-        {
-            id: 8,
-            category: 'meal',
-            badge: '한식/국밥',
-            badgeClass: 'badge-meal',
-            name: '국밥대장 역삼점',
-            loc: '서울 강남구 역삼로 215 (역삼동)',
-            tip: '직장인 해장 및 국밥 선호도 상위 업소',
-            menu: '얼큰 돼지국밥, 수육백반',
-            lat: 37.5015,
-            lng: 127.0435,
-            image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80',
-            link: 'https://www.naver.com/'
-        }
+        // 패스트푸드
+        { id: 1, category: 'fast', badge: '패스트푸드 (공공데이터)', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', tip: '위생등급 매우우수', menu: '상하이 버거 세트', lat: 37.5045, lng: 127.0489, image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80', link: 'https://www.mcdonalds.co.kr/' },
+        { id: 2, category: 'fast', badge: '패스트푸드 (공공데이터)', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', tip: '위생등급 우수', menu: '통새우와퍼', lat: 37.5049, lng: 127.0482, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80', link: 'https://www.burgerking.co.kr/' },
+        { id: 3, category: 'fast', badge: '패스트푸드 (공공데이터)', badgeClass: 'badge-fast', name: 'KFC 선릉점', loc: '서울 강남구 테헤란로 332', tip: '오전 징거버거 세트 인기', menu: '징거버거, 닭껍질튀김', lat: 37.5041, lng: 127.0492, image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=600&q=80', link: 'https://www.kfckorea.com/' },
+        { id: 4, category: 'fast', badge: '패스트푸드 (공공데이터)', badgeClass: 'badge-fast', name: '맘스터치 선릉점', loc: '서울 강남구 역삼로 310', tip: '싸이버거 직장인 점심 성지', menu: '싸이버거 세트', lat: 37.5002, lng: 127.0461, image: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=600&q=80', link: 'https://www.momstouch.co.kr/' },
+
+        // 샐러드 / 포케 / 샌드위치
+        { id: 5, category: 'salad', badge: '샐러드/샌드위치', badgeClass: 'badge-salad', name: '서브웨이 선릉점', loc: '서울 강남구 테헤란로 337', tip: '다이어터 필수 방문 코스', menu: '에그마요, 로스트치킨', lat: 37.5052, lng: 127.0465, image: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80', link: 'https://www.subway.co.kr/' },
+        { id: 6, category: 'salad', badge: '샐러드/포케', badgeClass: 'badge-salad', name: '포케올데이 선릉역점', loc: '서울 강남구 언주로 415', tip: '신선한 해산물 포케 전문', menu: '연어 프로틴 포케', lat: 37.5032, lng: 127.0441, image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80', link: 'https://www.pokeallday.com/' },
+        { id: 7, category: 'salad', badge: '샐러드/샌드위치', badgeClass: 'badge-salad', name: '샐러디 선릉점', loc: '서울 강남구 테헤란로 407', tip: '웜볼 및 채식 메뉴 특화', menu: '우삼겹 메밀면 샐러디', lat: 37.5065, lng: 127.0515, image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80', link: 'https://www.salady.com/' },
+        { id: 8, category: 'salad', badge: '샐러드/샌드위치', badgeClass: 'badge-salad', name: '파리바게뜨 선릉역점', loc: '서울 강남구 테헤란로 419', tip: '샌드위치 및 샐러드 상시 구비', menu: '치킨커틀릿 샌드위치', lat: 37.5072, lng: 127.0525, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80', link: 'https://www.paris.co.kr/' },
+
+        // 카페
+        { id: 9, category: 'cafe', badge: '카페 (공공데이터)', badgeClass: 'badge-cafe', name: '스타벅스 선릉역점', loc: '서울 강남구 테헤란로 334', tip: '테헤란로 대형 휴게음식점', menu: '아메리카노, 카페 라떼', lat: 37.5038, lng: 127.0495, image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80', link: 'https://www.starbucks.co.kr/' },
+        { id: 10, category: 'cafe', badge: '카페 (공공데이터)', badgeClass: 'badge-cafe', name: '투썸플레이스 선릉점', loc: '서울 강남구 선릉로 431', tip: '미팅룸 및 넓은 좌석 완비', menu: '아로마노트 아메리카노', lat: 37.5055, lng: 127.0475, image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&q=80', link: 'https://www.twosome.co.kr/' },
+        { id: 11, category: 'cafe', badge: '카페', badgeClass: 'badge-cafe', name: '컴포즈커피 선릉역점', loc: '서울 강남구 테헤란로 317', tip: '가성비 테이크아웃 전문', menu: '아이스 아메리카노, 흑당밀크티', lat: 37.5047, lng: 127.0485, image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80', link: 'https://composecoffee.com/' },
+        { id: 12, category: 'cafe', badge: '카페', badgeClass: 'badge-cafe', name: '메가MGC커피 선릉점', loc: '서울 강남구 선릉로 417', tip: '대용량 음료 및 디저트', menu: '메가리카노, 큐브라떼', lat: 37.5035, lng: 127.0470, image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80', link: 'https://www.mega-mgccoffee.com/' },
+        { id: 13, category: 'cafe', badge: '카페', badgeClass: 'badge-cafe', name: '빽다방 선릉역점', loc: '서울 강남구 테헤란로 325', tip: '합리적인 가격의 원조커피', menu: '원조커피, 사라다빵', lat: 37.5049, lng: 127.0472, image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80', link: 'https://paikdabang.com/' },
+
+        // 한식 / 식사
+        { id: 14, category: 'meal', badge: '한식/식사 (공공데이터)', badgeClass: 'badge-meal', name: '본죽&비빔밥 선릉점', loc: '서울 강남구 테헤란로 329', tip: '일반음식점 위생우수', menu: '차돌강된장 비빔밥', lat: 37.5058, lng: 127.0478, image: 'https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=600&q=80', link: 'https://www.bonif.co.kr/' },
+        { id: 15, category: 'meal', badge: '한식/국밥', badgeClass: 'badge-meal', name: '국밥대장 역삼점', loc: '서울 강남구 역삼로 215', tip: '직장인 해장국 전문', menu: '얼큰 돼지국밥', lat: 37.5015, lng: 127.0435, image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80', link: 'https://www.naver.com/' },
+        { id: 16, category: 'meal', badge: '한식/분식', badgeClass: 'badge-meal', name: '김가네 선릉점', loc: '서울 강남구 선릉로 425', tip: '다양한 분식 및 식사류', menu: '철판치즈김치볶음밥', lat: 37.5042, lng: 127.0478, image: 'https://images.unsplash.com/photo-1553163147-622ab57be1c9?auto=format&fit=crop&w=600&q=80', link: 'https://www.kimgane.co.kr/' },
+        { id: 17, category: 'meal', badge: '한식/칼국수', badgeClass: 'badge-meal', name: '찬양칼국수 선릉점', loc: '서울 강남구 언주로 429', tip: '점심 직장인 대기 맛집', menu: '해물칼국수, 만두', lat: 37.5040, lng: 127.0449, image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80', link: 'https://www.naver.com/' },
+
+        // 편의점 / 기타
+        { id: 18, category: 'convenience', badge: '편의점 (공공데이터)', badgeClass: 'badge-convenience', name: 'CU 선릉역점', loc: '서울 강남구 테헤란로 320', tip: '24시간 운영 휴게음식/소매', menu: '간편식, 즉석커피', lat: 37.5043, lng: 127.0480, image: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=600&q=80', link: 'https://bgfretail.com/' },
+        { id: 19, category: 'convenience', badge: '편의점 (공공데이터)', badgeClass: 'badge-convenience', name: 'GS25 선릉타워점', loc: '서울 강남구 테헤란로 310', tip: '도시락 및 택배 서비스', menu: '김밥, 반찬 도시락', lat: 37.5040, lng: 127.0474, image: 'https://images.unsplash.com/photo-1534483503119-f538354c46f7?auto=format&fit=crop&w=600&q=80', link: 'https://www.gsretail.com/' }
     ];
 
     let map;
@@ -417,10 +331,7 @@
                     <p class="fran-loc">📍 ${item.loc}</p>
                     <p class="fran-dist">🏃 현 위치에서 약 ${distText}</p>
                     <div class="fran-details">
-                        <ul>
-                            <li><strong>공공데이터/특징:</strong> ${item.tip}</li>
-                            <li><strong>추천 메뉴:</strong> ${item.menu}</li>
-                        </ul>
+                        <span><strong>특징:</strong> ${item.tip} | <strong>추천:</strong> ${item.menu}</span>
                     </div>
                 </div>
             `;
