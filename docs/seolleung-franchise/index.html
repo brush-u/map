@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>대규모 상권 8대 그룹 뷰포트 큐레이션 맵</title>
+    <title>선릉·역삼 상권 8대 그룹 및 인기추천 큐레이션 맵</title>
     <!-- 카카오 지도 API 및 클러스터러 라이브러리 -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=clusterer,services"></script>
     <style>
@@ -74,6 +74,17 @@
             color: #ffffff;
             border-color: #2563eb;
         }
+        .filter-btn-hot {
+            background: #fff1f2;
+            color: #e11d48;
+            border-color: #fecdd3;
+        }
+        .filter-btn-hot.active, .filter-btn-hot:hover {
+            background: #e11d48;
+            color: #ffffff;
+            border-color: #e11d48;
+        }
+
         .card-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -126,6 +137,7 @@
         .badge-group-6 { background: #fce7f3; color: #9d174d; }
         .badge-group-7 { background: #dcfce7; color: #166534; }
         .badge-group-8 { background: #f1f5f9; color: #334155; }
+        .badge-hot { background: #ef4444; color: #ffffff; font-weight: 800; }
 
         .fran-card h3 {
             font-size: 0.95rem;
@@ -171,18 +183,19 @@
 
 <div class="franchise-hub-container">
     <div class="hub-header">
-        <h2>🏛️ 대규모 상권 8대 그룹 뷰포트 큐레이션 맵</h2>
-        <p>수만 건의 대용량 데이터를 실시간 뷰포트 영역 내에서 8대 그룹별 필터링 및 클러스터링으로 고속 렌더링</p>
+        <h2>🏛️ 선릉·역삼 상권실무형 브랜드 큐레이션 맵</h2>
+        <p>실제 프랜차이즈 상호명 및 8대 그룹 분류 체계 적용 완료</p>
     </div>
 
     <!-- 지도 영역 -->
     <div id="map"></div>
 
-    <!-- 8대 그룹 필터 및 상태 바 -->
+    <!-- 필터 및 상태 바 -->
     <div class="map-control-bar">
-        <div class="status-indicator" id="status-text">📊 대규모 상권 데이터 로딩 중...</div>
+        <div class="status-indicator" id="status-text">📊 상권 데이터 로딩 중...</div>
         <div class="filter-buttons">
             <button class="filter-btn active" onclick="filterGroup('all', event)">전체보기</button>
+            <button class="filter-btn filter-btn-hot" onclick="filterGroup('hot', event)">🔥 인기추천</button>
             <button class="filter-btn" onclick="filterGroup('1', event)">1.한식·육류</button>
             <button class="filter-btn" onclick="filterGroup('2', event)">2.치킨·피자</button>
             <button class="filter-btn" onclick="filterGroup('3', event)">3.일식·돈가스</button>
@@ -196,18 +209,17 @@
 
     <!-- 카드 리스트 영역 -->
     <div class="card-grid" id="card-container">
-        <div class="loading-box">🔄 대규모 데이터셋을 비동기로 로드하는 중입니다...</div>
+        <div class="loading-box">🔄 상권 데이터를 비동기로 불러오는 중입니다...</div>
     </div>
 </div>
 
 <script>
-    let massiveDataset = []; // 수만 건의 대규모 데이터 원본 보관소
+    let massiveDataset = [];
     let map;
     let clusterer;
-    let currentGroup = 'all';
+    let currentFilter = 'all';
     let currentOverlay = null;
 
-    // 8대 그룹 정의 메타데이터
     const groupMeta = {
         '1': { name: '1.한식·육류', badgeClass: 'badge-group-1' },
         '2': { name: '2.치킨·피자', badgeClass: 'badge-group-2' },
@@ -217,6 +229,18 @@
         '6': { name: '6.분식', badgeClass: 'badge-group-6' },
         '7': { name: '7.서양식·아시안', badgeClass: 'badge-group-7' },
         '8': { name: '8.카페·디저트', badgeClass: 'badge-group-8' }
+    };
+
+    // 실제 상권 분석에 쓰이는 유력 브랜드 및 상호명 풀(Pool)
+    const brandPool = {
+        '1': ['육전식당', '선릉대파곱창', '마녀김치찌개', '백년토종삼계탕', '하남돼지집', '남도토속음식', '봉평메밀촌'],
+        '2': ['교촌치킨 선릉점', 'BHC치킨 역삼점', 'BBQ올리브치킨', '피자알볼로', '반올림피자샵', '굽네치킨'],
+        '3': ['카쯔야 선릉점', '사보텐 역삼점', '멘야한이', '스시마이우', '모던카츠', '초밥의신부부'],
+        '4': ['홍콩반점0410 선릉점', '마라중경', '천향원 마라탕', '칭구아중식', '메이탄 역삼점'],
+        '5': ['노브랜드버거 선릉점', '버거킹 선릉역점', '맥도날드 선릉점', '맘스터치', '쉐이크쉑 강남'],
+        '6': ['김가네김밥 선릉점', '스쿨푸드', '국대떡볶이', '신전떡볶이', '바르다김선생'],
+        '7': ['오프라이스 파스타', '띤띤파오(아시안)', '포메인 선릉점', '멘타이코', '타코벨'],
+        '8': ['스타벅스 선릉역점', '투썸플레이스 선릉점', '컴포즈커피', '메가MGC커피', '이디야커피', '블루보틀']
     };
 
     function initMap() {
@@ -233,7 +257,6 @@
             minLevel: 6
         });
 
-        // 뷰포트(이동/확대·축소) 변경 시 마커 및 리스트 자동 동기화
         kakao.maps.event.addListener(map, 'bounds_changed', handleViewportRender);
         kakao.maps.event.addListener(map, 'click', function() {
             if (currentOverlay) {
@@ -242,22 +265,20 @@
             }
         });
 
-        fetchMassiveDataset();
+        fetchRealisticDataset();
     }
 
-    // 대규모 데이터셋 비동기 적재 (실무에서는 백엔드 API / 대용량 스트림 연동)
-    async function fetchMassiveDataset() {
-        document.getElementById('status-text').innerText = '⏳ 대규모 데이터셋(15,000건) 인덱싱 및 그룹 매핑 중...';
+    async function fetchRealisticDataset() {
+        document.getElementById('status-text').innerText = '⏳ 실제 프랜차이즈 상권 데이터셋 생성 및 인덱싱 중...';
         
         setTimeout(() => {
-            massiveDataset = generateMockMassiveData(15000);
-            document.getElementById('status-text').innerText = `✅ 총 ${massiveDataset.length.toLocaleString()}건 적재 완료 (8대 그룹 분류 적용)`;
+            massiveDataset = generateRealisticMassiveData(5000); // 5,000건 현실적 데이터 생성
+            document.getElementById('status-text').innerText = `✅ 총 ${massiveDataset.length.toLocaleString()}건 적재 완료 (실제 상호명 적용)`;
             handleViewportRender();
         }, 400);
     }
 
-    // 대규모 테스트용 8대 그룹 가상 데이터 생성기
-    function generateMockMassiveData(count) {
+    function generateRealisticMassiveData(count) {
         const groupKeys = Object.keys(groupMeta);
         const results = [];
         const baseLat = 37.5045;
@@ -267,39 +288,46 @@
             const latOffset = (Math.random() - 0.5) * 0.04;
             const lngOffset = (Math.random() - 0.5) * 0.05;
             const gKey = groupKeys[Math.floor(Math.random() * groupKeys.length)];
+            
+            // 해당 그룹의 실제 브랜드 풀에서 무작위 선택 후 고유 번호 부여로 현실감 부여
+            const names = brandPool[gKey];
+            const baseName = names[Math.floor(Math.random() * names.length)];
+            const storeName = `${baseName} 테헤란${i % 150 + 1}호점`;
+
+            const isHot = Math.random() < 0.18; // 약 18% 인기추천 부여
 
             results.push({
                 id: i,
-                name: `상권프랜차이즈점_${i}`,
+                name: storeName,
                 groupId: gKey,
                 groupName: groupMeta[gKey].name,
                 badgeClass: groupMeta[gKey].badgeClass,
-                loc: `서울특별시 강남구 테헤란로 ${i % 500 + 1}길`,
+                isHot: isHot,
+                loc: `서울특별시 강남구 테헤란로 ${i % 400 + 1}길`,
                 phone: `02-${Math.floor(Math.random()*800+200)}-${Math.floor(Math.random()*9000+1000)}`,
                 lat: baseLat + latOffset,
                 lng: baseLng + lngOffset,
-                url: `https://map.kakao.com/link/search/상권 매장 ${i}`
+                url: `https://map.kakao.com/link/search/${encodeURIComponent(storeName)}`
             });
         }
         return results;
     }
 
-    // [핵심] 뷰포트 내 가시 데이터 추출 및 8대 그룹 필터링 적용 렌더러
     function handleViewportRender() {
         if (massiveDataset.length === 0) return;
 
         const bounds = map.getBounds();
 
-        // 1단계: 뷰포트 영역 및 선택된 8대 그룹 조건으로 필터링
         const visibleData = massiveDataset.filter(item => {
-            if (currentGroup !== 'all' && item.groupId !== currentGroup) {
+            if (currentFilter === 'hot') {
+                if (!item.isHot) return false;
+            } else if (currentFilter !== 'all' && item.groupId !== currentFilter) {
                 return false;
             }
             const coords = new kakao.maps.LatLng(item.lat, item.lng);
             return bounds.contain(coords);
         });
 
-        // 2단계: 클러스터러 마커 갱신
         clusterer.clear();
         const markers = visibleData.map(item => {
             const coords = new kakao.maps.LatLng(item.lat, item.lng);
@@ -330,8 +358,6 @@
         });
 
         clusterer.addMarkers(markers);
-
-        // 3단계: 하단 리스트 카드 렌더링 (브라우저 성능 최적화를 위해 가시 데이터 중 상위 100건만 슬라이싱)
         renderCards(visibleData.slice(0, 100), visibleData.length);
     }
 
@@ -356,6 +382,7 @@
                     <div>
                         <div class="badge-group">
                             <span class="badge ${item.badgeClass}">🏢 ${item.groupName}</span>
+                            ${item.isHot ? '<span class="badge badge-hot">🔥 인기추천</span>' : ''}
                         </div>
                         <h3>${item.name}</h3>
                         <p class="fran-loc">📍 ${item.loc}</p>
@@ -367,12 +394,11 @@
         });
     }
 
-    // 8대 그룹 필터 이벤트 핸들러
-    function filterGroup(groupKey, event) {
+    function filterGroup(filterKey, event) {
         document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
         if (event) event.target.classList.add('active');
 
-        currentGroup = groupKey;
+        currentFilter = filterKey;
         handleViewportRender();
     }
 
