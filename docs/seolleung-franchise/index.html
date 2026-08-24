@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>소상공인시장진흥공단 상권정보 대규모 데이터 표준 큐레이션</title>
+    <title>선릉·역삼 프랜차이즈 상권 대규모 데이터 표준 큐레이션</title>
     <!-- 카카오 지도 API 및 클러스터러 라이브러리 -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=clusterer"></script>
     <style>
@@ -172,9 +172,9 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             text-align: center;
-            width: 200px;
+            width: 220px;
             bottom: 40px;
-            left: -100px;
+            left: -110px;
             position: relative;
             cursor: pointer;
         }
@@ -203,8 +203,8 @@
 
 <div class="curation-wrapper">
     <div class="header">
-        <h2>🏬 소상공인시장진흥공단 상가(상권)정보 대규모 데이터 표준 큐레이션</h2>
-        <p id="status-desc">대규모 데이터를 안전하게 로드 중입니다...</p>
+        <h2>☕ 선릉·역삼 지역 프랜차이즈 상권 대규모 데이터 큐레이션</h2>
+        <p id="status-desc">선릉/역삼 프랜차이즈 데이터를 안전하게 로드 중입니다...</p>
     </div>
 
     <!-- 지도 영역 -->
@@ -212,12 +212,12 @@
 
     <!-- 컨트롤 및 필터 바 -->
     <div class="control-panel">
-        <button class="action-btn" onclick="requestUserLocation()">📍 내 주변 상권 정렬</button>
+        <button class="action-btn" onclick="requestUserLocation()">📍 선릉역 기준 내 주변 정렬</button>
         <div class="category-filters">
             <button class="filter-chip active" onclick="filterByCategory('전체', event)">전체</button>
-            <button class="filter-chip" onclick="filterByCategory('음식', event)">음식</button>
-            <button class="filter-chip" onclick="filterByCategory('소비재', event)">소비재/유통</button>
-            <button class="filter-chip" onclick="filterByCategory('서비스', event)">생활서비스</button>
+            <button class="filter-chip" onclick="filterByCategory('카페', event)">카페/음료</button>
+            <button class="filter-chip" onclick="filterByCategory('음식점', event)">패스트푸드/외식</button>
+            <button class="filter-chip" onclick="filterByCategory('베이커리', event)">베이커리/디저트</button>
         </div>
     </div>
 
@@ -231,48 +231,64 @@
 </div>
 
 <script>
-    // 전역 데이터 저장소 (수천 건 이상의 공공데이터 배열을 안전하게 유지)
+    // 전역 데이터 저장소 (선릉·역삼 프랜차이즈 전용 대규모 배열)
     let masterStoreDatabase = [];
     let currentFilteredData = [];
     let currentPage = 1;
-    const itemsPerPage = 12; // 한 페이지당 보여줄 카드 수 (DOM 부하 방지)
+    const itemsPerPage = 12; // 페이지당 카드 수 제한으로 DOM 렉 원천 방지
 
     let map = null;
     let clusterer = null;
     let activeOverlay = null;
-    let userCurrentCoords = { lat: 37.5045, lng: 127.0485 }; // 선릉역 기준 기본값
+    let userCurrentCoords = { lat: 37.5045, lng: 127.0485 }; // 선릉역 좌표 고정 기준
 
-    // [표준 구조] 공공데이터 시뮬레이션 및 데이터 로드 함수 (실제 API 연동 시 fetch() 결과로 대체 가능)
-    function loadPublicStoreData() {
-        const categories = ['음식', '소비재', '서비스'];
-        const subNames = ['카페', '한식당', '베이커리', '편의점', '미용실', '스터디카페', '패스트푸드', '세탁소'];
-        
+    // [표준 구조] 선릉/역삼 지역 프랜차이즈 공공데이터 시뮬레이션 및 로드 함수
+    function loadSeolleungFranchiseData() {
+        const franchises = [
+            { brand: '스타벅스', cat: '카페', sub: '스타벅스 선릉점' },
+            { brand: '스타벅스', cat: '카페', sub: '스타벅스 역삼래미안점' },
+            { brand: '메가MGC커피', cat: '카페', sub: '메가커피 선릉역점' },
+            { brand: '이디야커피', cat: '카페', sub: '이디야 선릉공원점' },
+            { brand: '투썸플레이스', cat: '카페', sub: '투썸플레이스 역삼점' },
+            { brand: '컴포즈커피', cat: '카페', sub: '컴포즈 선릉점' },
+            { brand: '써브웨이', cat: '음식점', sub: '써브웨이 선릉점' },
+            { brand: '맥도날드', cat: '음식점', sub: '맥도날드 선릉점' },
+            { brand: '버거킹', cat: '음식점', sub: '버거킹 역삼점' },
+            { brand: '파리바게뜨', cat: '베이커리', sub: '파리바게뜨 선릉역점' },
+            { brand: '뚜레쥬르', cat: '베이커리', sub: '뚜레쥬르 역삼중앙점' },
+            { brand: '공차', cat: '카페', sub: '공차 선릉점' }
+        ];
+
+        const streets = ['테헤란로', '역삼로', '선릉로', '삼성로'];
         let tempArr = [];
-        // 수백/수천 건(예: 1,200건)의 대규모 공공데이터 생성 시뮬레이션
-        for (let i = 1; i <= 1200; i++) {
-            const cat = categories[(i * 3) % categories.length];
-            const sub = subNames[(i * 7) % subNames.length];
-            const randLat = 37.5045 + (Math.random() - 0.5) * 0.04;
-            const randLng = 127.0485 + (Math.random() - 0.5) * 0.04;
+        
+        // 선릉, 역삼 일대 프랜차이즈 데이터셋 대규모 확장 시뮬레이션 (수백 건 정밀 관리 구조)
+        for (let i = 1; i <= 600; i++) {
+            const franchise = franchises[i % franchises.length];
+            const street = streets[i % streets.length];
+            
+            // 선릉역(37.5045, 127.0485) 반경 내 좌표 분산
+            const randLat = 37.5045 + (Math.random() - 0.5) * 0.03;
+            const randLng = 127.0485 + (Math.random() - 0.5) * 0.03;
 
             tempArr.push({
                 id: i,
-                name: `테헤란상권 ${sub} #${i}`,
-                category: cat,
-                subCategory: sub,
-                address: `서울 강남구 테헤란로 ${100 + (i % 400)}`,
-                phone: `02-${Math.floor(100+Math.random()*900)}-${Math.floor(1000+Math.random()*9000)}`,
+                name: `${franchise.brand} ${i}호점`,
+                category: franchise.cat,
+                subCategory: franchise.brand,
+                address: `서울 강남구 ${street} ${50 + (i % 250)}`,
+                phone: `02-${Math.floor(500+Math.random()*400)}-${Math.floor(1000+Math.random()*9000)}`,
                 lat: randLat,
                 lng: randLng,
-                // 의도적으로 일부 링크를 비워두어 상세페이지 부재 시 네이버/구글 검색 대체 테스트 가능하게 설정
-                link: i % 5 === 0 ? `https://m.place.naver.com/restaurant/${200000 + i}/home` : ''
+                // 상세 링크가 없는 경우 네이버 모바일 통합검색 우회 연결을 위한 플래그 처리
+                link: i % 4 === 0 ? `https://m.place.naver.com/restaurant/${300000 + i}/home` : ''
             });
         }
 
         masterStoreDatabase = tempArr;
         currentFilteredData = [...masterStoreDatabase];
         
-        document.getElementById('status-desc').innerText = `총 ${masterStoreDatabase.length.toLocaleString()}건의 상권 공공데이터 전수 적재 완료 (클러스터링 & 페이징 적용)`;
+        document.getElementById('status-desc').innerText = `선릉·역삼 지역 프랜차이즈 상권 데이터 총 ${masterStoreDatabase.length.toLocaleString()}건 전수 적재 완료`;
         
         initKakaoMap();
     }
@@ -281,7 +297,7 @@
         const container = document.getElementById('map');
         const options = {
             center: new kakao.maps.LatLng(userCurrentCoords.lat, userCurrentCoords.lng),
-            level: 5
+            level: 4
         };
         map = new kakao.maps.Map(container, options);
 
@@ -293,11 +309,11 @@
             }
         });
 
-        // [표준 구조] 대규모 마커 처리를 위한 마커 클러스터러 필수 적용
+        // [표준 구조] 대규모 프랜차이즈 마커 렌더링 부하를 막기 위한 마커 클러스터러 필수 적용
         clusterer = new kakao.maps.MarkerClusterer({
             map: map,
             averageCenter: true,
-            minLevel: 6,
+            minLevel: 5,
             disableClickZoom: false
         });
 
@@ -311,7 +327,7 @@
         if (item.link && item.link.trim() !== '' && !item.link.includes('undefined')) {
             return item.link;
         }
-        // 상세페이지가 없을 경우 네이버 모바일 통합검색으로 다이렉트 우회 연결
+        // 상세 링크가 빈 경우 네이버 모바일 통합검색으로 다이렉트 우회 연결
         return `https://m.search.naver.com/search.naver?query=${encodeURIComponent(item.name + ' ' + item.address)}`;
     }
 
@@ -343,13 +359,13 @@
                 
                 applyPaginationAndRender(1);
                 renderMapMarkers(currentFilteredData);
-            }, () => alert('현재 위치를 가져올 수 없습니다.'));
+            }, () => alert('현재 위치를 가져올 수 없습니다. 선릉역 기준을 유지합니다.'));
         } else {
             alert('위치 정보가 지원되지 않는 브라우저입니다.');
         }
     }
 
-    // [표준 구조] 카드 목록 페이징 렌더링 (메모리 및 DOM 부하 제어)
+    // [표준 구조] 카드 목록 페이징 렌더링
     function applyPaginationAndRender(targetPage) {
         currentPage = targetPage;
         const gridContainer = document.getElementById('card-grid-container');
@@ -358,11 +374,10 @@
         paginationBar.innerHTML = '';
 
         if (currentFilteredData.length === 0) {
-            gridContainer.innerHTML = '<div class="loading-state">검색 결과가 존재하지 않습니다.</div>';
+            gridContainer.innerHTML = '<div class="loading-state">해당 조건의 프랜차이즈 매장이 존재하지 않습니다.</div>';
             return;
         }
 
-        // 페이징 슬라이싱
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         const pageItems = currentFilteredData.slice(startIndex, endIndex);
@@ -374,7 +389,7 @@
             const card = document.createElement('div');
             card.className = 'store-card';
             
-            // [요구사항 2] 카드 상호 클릭 시 상세페이지 또는 대체 검색으로 다이렉트 이동
+            // [요구사항 2] 카드 상호 클릭 시 상세페이지 또는 대체 검색으로 즉시 다이렉트 이동
             card.onclick = () => window.open(targetUrl, '_blank');
 
             card.innerHTML = `
@@ -387,7 +402,7 @@
                     <p class="store-info">📞 ${item.phone}</p>
                 </div>
                 <div class="store-footer">
-                    <span>🏃 내 위치에서 약 ${distStr}</span>
+                    <span>🏃 선릉역에서 약 ${distStr}</span>
                     <span style="color: #2563eb; text-decoration: underline;">상세보기 &rarr;</span>
                 </div>
             `;
@@ -434,7 +449,7 @@
             const marker = new kakao.maps.Marker({ position: coords });
             const targetUrl = getValidDetailLink(item);
 
-            // [요구사항 2] 지도 상호 오버레이 클릭 시 상세페이지(또는 네이버 대체검색) 이동
+            // [요구사항 2] 지도 오버레이 클릭 시 상세페이지(또는 네이버 대체검색) 이동
             const bubbleEl = document.createElement('div');
             bubbleEl.className = 'map-bubble';
             bubbleEl.innerHTML = `
@@ -479,13 +494,12 @@
         renderMapMarkers(currentFilteredData);
     }
 
-    // 페이지 로드 시 공공데이터 초기화 실행
+    // 페이지 로드 시 초기화 실행
     window.onload = function() {
         if (typeof kakao !== 'undefined' && kakao.maps) {
-            kakao.maps.load(loadPublicStoreData);
+            kakao.maps.load(loadSeolleungFranchiseData);
         } else {
-            // 카카오맵 스크립트 로드 대기 방어 코드
-            setTimeout(loadPublicStoreData, 500);
+            setTimeout(loadSeolleungFranchiseData, 500);
         }
     };
 </script>
