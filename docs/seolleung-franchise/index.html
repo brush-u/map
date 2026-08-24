@@ -86,7 +86,7 @@
             overflow-y: auto;
             padding-right: 4px;
         }
-        /* 원형 썸네일 카드 디자인 */
+        /* 카드 디자인 */
         .fran-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -180,9 +180,9 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             text-align: center;
-            width: 170px;
-            bottom: 40px;
-            left: -85px;
+            width: 180px;
+            bottom: 45px;
+            left: -90px;
             cursor: pointer;
             transition: box-shadow 0.2s;
         }
@@ -220,7 +220,7 @@
 <div class="franchise-hub-container">
     <div class="hub-header">
         <h2>🏛️ 선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵</h2>
-        <p>전체 목록 유지, 부드러운 사각박스 오버레이 및 안전한 검색엔진 링크 연동</p>
+        <p>전체 목록 유지, 안전한 검색엔진 대체 링크 및 부드러운 사각박스 오버레이 적용</p>
     </div>
 
     <!-- 카카오 지도 영역 -->
@@ -249,7 +249,22 @@
 </div>
 
 <script>
-    let franchiseData = [];
+    // 원본 데이터를 완벽하게 보존하는 전역 변수
+    const originalFranchiseData = [
+        { id: 1, category: 'fast', isHot: true, badge: '패스트푸드', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', tip: '위생등급 매우우수', lat: 37.5045, lng: 127.0489, image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/31191024/home' },
+        { id: 2, category: 'fast', isHot: false, badge: '패스트푸드', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', tip: '통새우와퍼 인기', lat: 37.5049, lng: 127.0482, image: '', link: '' },
+        { id: 3, category: 'salad', isHot: true, badge: '샐러드/포케', badgeClass: 'badge-salad', name: '포케올데이 선릉역점', loc: '서울 강남구 언주로 415', tip: '신선한 해산물 포케', lat: 37.5032, lng: 127.0441, image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/1849204928/home' },
+        { id: 4, category: 'cafe', isHot: true, badge: '카페', badgeClass: 'badge-cafe', name: '스타벅스 선릉역점', loc: '서울 강남구 테헤란로 334', tip: '대형 휴게음식점', lat: 37.5038, lng: 127.0495, image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/35728491/home' },
+        { id: 5, category: 'meal', isHot: true, badge: '한식', badgeClass: 'badge-meal', name: '북창동순두부 선릉2호점', loc: '서울 강남구 선릉로82길 15', tip: '갓 지은 돌솥밥과 찌개', lat: 37.5031, lng: 127.0485, image: 'https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/11872938/home' },
+        { id: 6, category: 'chineses', isHot: true, badge: '중식', badgeClass: 'badge-chineses', name: '홍콩반점0410 선릉점', loc: '서울 강남구 테헤란로 325', tip: '탕수육 맛집', lat: 37.5042, lng: 127.0470, image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/37281921/home' },
+        { id: 7, category: 'chineses', isHot: false, badge: '중식', badgeClass: 'badge-chineses', name: '메이탄 선릉점', loc: '서울 강남구 테헤란로 316', tip: '프리미엄 차이니즈', lat: 37.5035, lng: 127.0460, image: '', link: '' },
+        { id: 8, category: 'japanese', isHot: true, badge: '일식', badgeClass: 'badge-japanese', name: '스바루 일식 전문점', loc: '서울 강남구 선릉로 420', tip: '수제 메밀소바 및 카츠', lat: 37.5050, lng: 127.0470, image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/19283920/home' },
+        { id: 9, category: 'japanese', isHot: false, badge: '일식', badgeClass: 'badge-japanese', name: '키와마루아지 선릉점', loc: '서울 강남구 역삼로 310', tip: '진한 진국 육수 라멘', lat: 37.5008, lng: 127.0458, image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=200&q=80', link: '' },
+        { id: 10, category: 'family', isHot: true, badge: '고깃집/회식', badgeClass: 'badge-family', name: '선릉역 삼겹살 명가', loc: '서울 강남구 역삼로 305', tip: '숙성 생고기 전문', lat: 37.5015, lng: 127.0455, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/38291920/home' },
+        { id: 11, category: 'family', isHot: true, badge: '고깃집/회식', badgeClass: 'badge-family', name: '배꼽집 선릉점', loc: '서울 강남구 선릉로 424', tip: '한우 및 불고기 특선', lat: 37.5046, lng: 127.0478, image: '', link: '' }
+    ];
+
+    let franchiseData = [...originalFranchiseData];
     let map;
     let clusterer;
     let currentCenter = { lat: 37.5045, lng: 127.0485 };
@@ -276,36 +291,18 @@
             minLevel: 5
         });
 
-        loadCurationData();
-    }
-
-    function loadCurationData() {
-        // 전체 원본 데이터셋 정의 (누락 없이 모두 포함)
-        franchiseData = [
-            { id: 1, category: 'fast', isHot: true, badge: '패스트푸드', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', tip: '위생등급 매우우수', lat: 37.5045, lng: 127.0489, image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/31191024/home' },
-            { id: 2, category: 'fast', isHot: false, badge: '패스트푸드', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', tip: '통새우와퍼 인기', lat: 37.5049, lng: 127.0482, image: '', link: '' },
-            { id: 3, category: 'salad', isHot: true, badge: '샐러드/포케', badgeClass: 'badge-salad', name: '포케올데이 선릉역점', loc: '서울 강남구 언주로 415', tip: '신선한 해산물 포케', lat: 37.5032, lng: 127.0441, image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/1849204928/home' },
-            { id: 4, category: 'cafe', isHot: true, badge: '카페', badgeClass: 'badge-cafe', name: '스타벅스 선릉역점', loc: '서울 강남구 테헤란로 334', tip: '대형 휴게음식점', lat: 37.5038, lng: 127.0495, image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/35728491/home' },
-            { id: 5, category: 'meal', isHot: true, badge: '한식', badgeClass: 'badge-meal', name: '북창동순두부 선릉2호점', loc: '서울 강남구 선릉로82길 15', tip: '갓 지은 돌솥밥과 찌개', lat: 37.5031, lng: 127.0485, image: 'https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/11872938/home' },
-            { id: 6, category: 'chineses', isHot: true, badge: '중식', badgeClass: 'badge-chineses', name: '홍콩반점0410 선릉점', loc: '서울 강남구 테헤란로 325', tip: '탕수육 맛집', lat: 37.5042, lng: 127.0470, image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/37281921/home' },
-            { id: 7, category: 'chineses', isHot: false, badge: '중식', badgeClass: 'badge-chineses', name: '메이탄 선릉점', loc: '서울 강남구 테헤란로 316', tip: '프리미엄 차이니즈', lat: 37.5035, lng: 127.0460, image: '', link: '' },
-            { id: 8, category: 'japanese', isHot: true, badge: '일식', badgeClass: 'badge-japanese', name: '스바루 일식 전문점', loc: '서울 강남구 선릉로 420', tip: '수제 메밀소바 및 카츠', lat: 37.5050, lng: 127.0470, image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/19283920/home' },
-            { id: 9, category: 'japanese', isHot: false, badge: '일식', badgeClass: 'badge-japanese', name: '키와마루아지 선릉점', loc: '서울 강남구 역삼로 310', tip: '진한 진국 육수 라멘', lat: 37.5008, lng: 127.0458, image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=200&q=80', link: '' },
-            { id: 10, category: 'family', isHot: true, badge: '고깃집/회식', badgeClass: 'badge-family', name: '선릉역 삼겹살 명가', loc: '서울 강남구 역삼로 305', tip: '숙성 생고기 전문', lat: 37.5015, lng: 127.0455, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/38291920/home' },
-            { id: 11, category: 'family', isHot: true, badge: '고깃집/회식', badgeClass: 'badge-family', name: '배꼽집 선릉점', loc: '서울 강남구 선릉로 424', tip: '한우 및 불고기 특선', lat: 37.5046, lng: 127.0478, image: '', link: '' }
-        ];
-
         calculateDistances(currentCenter.lat, currentCenter.lng);
         renderCards(franchiseData);
         renderMarkersAndCluster(franchiseData);
     }
 
+    // 확실하게 작동하는 네이버 검색엔진 링크 대체 함수
     function getValidLink(item) {
-        if (item.link && item.link.trim() !== '') {
+        if (item.link && item.link.trim() !== '' && !item.link.includes('undefined')) {
             return item.link;
         }
-        // 플레이스 링크가 없을 경우 네이버 모바일 통합 검색 결과로 안전하게 대체 연결
-        return `https://m.search.naver.com/search.naver?query=${encodeURIComponent(item.name)}`;
+        // 플레이스 상세 주소가 없을 경우 네이버 통합검색 결과 페이지로 확실히 유도
+        return `https://search.naver.com/search.naver?query=${encodeURIComponent(item.name)}`;
     }
 
     function getDistance(lat1, lon1, lat2, lon2) {
@@ -417,7 +414,7 @@
             };
 
             card.innerHTML = `
-                <div class="ns-img-wrapper fran-img-wrapper">
+                <div class="fran-img-wrapper">
                     <img src="${imgSrc}" class="fran-img" alt="${item.name}" onerror="this.src='${fallbackImg}'">
                 </div>
                 <div class="fran-content">
@@ -451,18 +448,15 @@
             else if(text.includes('고깃집')) currentCategory = 'family';
         }
 
-        if(currentCategory === 'all') {
-            renderCards(franchiseData);
-            renderMarkersAndCluster(franchiseData);
-        } else if(currentCategory === 'hot') {
-            const filtered = franchiseData.filter(item => item.isHot);
-            renderCards(filtered);
-            renderMarkersAndCluster(filtered);
-        } else {
-            const filtered = franchiseData.filter(item => item.category === currentCategory);
-            renderCards(filtered);
-            renderMarkersAndCluster(filtered);
+        let targetData = originalFranchiseData;
+        if(currentCategory === 'hot') {
+            targetData = originalFranchiseData.filter(item => item.isHot);
+        } else if(currentCategory !== 'all') {
+            targetData = originalFranchiseData.filter(item => item.category === currentCategory);
         }
+
+        renderCards(targetData);
+        renderMarkersAndCluster(targetData);
     }
 
     function filterCategory(category, event) {
