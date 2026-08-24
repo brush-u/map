@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵 (완성형 프로덕션 버전)</title>
+    <title>선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵 (완벽 반영 버전)</title>
     <!-- 카카오 지도 API 및 클러스터러 라이브러리 -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=clusterer"></script>
     <style>
@@ -96,7 +96,6 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer;
-            position: relative;
         }
         .fran-card:hover {
             transform: translateY(-2px);
@@ -105,7 +104,7 @@
         .fran-img-wrapper {
             width: 95px;
             min-width: 95px;
-            height: 100%;
+            height: 110px;
             background-color: #f1f5f9;
         }
         .fran-img {
@@ -114,7 +113,7 @@
             object-fit: cover; /* 세로 깨짐 방지 */
         }
         .fran-content {
-            padding: 12px;
+            padding: 10px 12px;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
@@ -153,21 +152,24 @@
         .fran-loc {
             font-size: 0.75rem;
             color: #64748b;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
         .fran-dist {
             font-size: 0.72rem;
             font-weight: 600;
             color: #0284c7;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         .fran-details {
-            font-size: 0.75rem;
+            font-size: 0.73rem;
             color: #334155;
             background: #f8fafc;
-            padding: 4px 6px;
+            padding: 3px 6px;
             border-radius: 4px;
             border: 1px solid #f1f5f9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .loading-box {
             text-align: center;
@@ -183,7 +185,7 @@
 <div class="franchise-hub-container">
     <div class="hub-header">
         <h2>🏛️ 선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵</h2>
-        <p>수천 건 대규모 인허가 DB 연동 및 세분화 카테고리 / 인기 맛집 큐레이션 서비스</p>
+        <p>세분화된 카테고리(일식·중식·고깃집 등) 및 인기 추천 맛집 완벽 반영 버전</p>
     </div>
 
     <!-- 카카오 지도 영역 -->
@@ -201,13 +203,13 @@
             <button class="filter-btn" onclick="filterCategory('meal', event)">한식</button>
             <button class="filter-btn" onclick="filterCategory('chineses', event)">중식</button>
             <button class="filter-btn" onclick="filterCategory('japanese', event)">일식</button>
-            <button class="filter-btn" onclick="filterCategory('family', event)">고깃집/패밀리</button>
+            <button class="filter-btn" onclick="filterCategory('family', event)">고깃집/회식</button>
         </div>
     </div>
 
     <!-- 상세 정보 카드 목록 -->
     <div class="card-grid" id="card-container">
-        <div class="loading-box">🔄 수천 건의 공공데이터베이스 및 상권 정보를 연동 중입니다...</div>
+        <div class="loading-box">🔄 데이터를 불러오는 중입니다...</div>
     </div>
 </div>
 
@@ -216,7 +218,7 @@
     let map;
     let clusterer;
     let currentCenter = { lat: 37.5045, lng: 127.0485 };
-    let currentInfowindow = null; // 현재 열린 인포윈도우 추적 변수
+    let currentInfowindow = null; // 현재 열린 인포윈도우 관리 변수
 
     function initMap() {
         const mapContainer = document.getElementById('map');
@@ -226,7 +228,7 @@
         };
         map = new kakao.maps.Map(mapContainer, mapOption);
         
-        // 지도를 클릭했을 때 열려있는 인포윈도우 닫기
+        // 지도 여백 클릭 시 열려있는 인포윈도우 닫기
         kakao.maps.event.addListener(map, 'click', function() {
             if (currentInfowindow) {
                 currentInfowindow.close();
@@ -240,42 +242,28 @@
             minLevel: 5
         });
 
-        fetchBackendProxyData();
+        loadCurationData();
     }
 
-    async function fetchBackendProxyData() {
-        try {
-            const largeScaleData = await simulateLargeScaleBackendProxy();
-            franchiseData = largeScaleData;
-            calculateDistances(currentCenter.lat, currentCenter.lng);
-            renderCards(franchiseData);
-            renderMarkersAndCluster(franchiseData);
-        } catch (error) {
-            console.error('데이터 연동 오류:', error);
-            document.getElementById('card-container').innerHTML = `
-                <div class="loading-box" style="color:#ef4444;">
-                    ⚠️ 백엔드 프록시 데이터 연동 중 오류가 발생했습니다.
-                </div>`;
-        }
-    }
+    function loadCurationData() {
+        // 일식, 중식, 패밀리/고깃집 및 인기 추천 맛집이 대폭 확충된 데이터셋
+        franchiseData = [
+            { id: 1, category: 'fast', isHot: true, badge: '패스트푸드', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', tip: '위생등급 매우우수 / 직장인 점심 만남의 장소', lat: 37.5045, lng: 127.0489, image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/31191024/home' },
+            { id: 2, category: 'fast', isHot: false, badge: '패스트푸드', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', tip: '위생등급 우수 / 통새우와퍼 인기', lat: 37.5049, lng: 127.0482, image: '', link: 'https://m.place.naver.com/restaurant/35324519/home' },
+            { id: 3, category: 'salad', isHot: true, badge: '샐러드/포케', badgeClass: 'badge-salad', name: '포케올데이 선릉역점', loc: '서울 강남구 언주로 415', tip: '인기 추천 맛집 / 신선한 해산물 포케', lat: 37.5032, lng: 127.0441, image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/1849204928/home' },
+            { id: 4, category: 'cafe', isHot: true, badge: '카페', badgeClass: 'badge-cafe', name: '스타벅스 선릉역점', loc: '서울 강남구 테헤란로 334', tip: '테헤란로 대형 휴게음식점 / 모임 최적', lat: 37.5038, lng: 127.0495, image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/35728491/home' },
+            { id: 5, category: 'meal', isHot: true, badge: '한식', badgeClass: 'badge-meal', name: '북창동순두부 선릉2호점', loc: '서울 강남구 선릉로82길 15', tip: '인기 추천 / 갓 지은 돌솥밥과 찌개', lat: 37.5031, lng: 127.0485, image: 'https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/11872938/home' },
+            { id: 6, category: 'chineses', isHot: true, badge: '중식', badgeClass: 'badge-chineses', name: '홍콩반점0410 선릉점', loc: '서울 강남구 테헤란로 325', tip: '직장인 인기 중식당 / 탕수육 맛집', lat: 37.5042, lng: 127.0470, image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/37281921/home' },
+            { id: 7, category: 'chineses', isHost: false, badge: '중식', badgeClass: 'badge-chineses', name: '메이탄 선릉점', loc: '서울 강남구 테헤란로 316', tip: '고급 프리미엄 차이니즈 레스토랑', lat: 37.5035, lng: 127.0460, image: '', link: 'https://m.place.naver.com/restaurant/32819201/home' },
+            { id: 8, category: 'japanese', isHot: true, badge: '일식', badgeClass: 'badge-japanese', name: '스바루 일식 전문점', loc: '서울 강남구 선릉로 420', tip: '인기 추천 / 수제 메밀소바 및 카츠', lat: 37.5050, lng: 127.0470, image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/19283920/home' },
+            { id: 9, category: 'japanese', isHot: false, badge: '일식', badgeClass: 'badge-japanese', name: '키와마루아지 선릉점', loc: '서울 강남구 역삼로 310', tip: '진한 진국 육수 일본라멘 전문점', lat: 37.5008, lng: 127.0458, image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/38192041/home' },
+            { id: 10, category: 'family', isHot: true, badge: '고깃집/회식', badgeClass: 'badge-family', name: '선릉역 삼겹살 명가', loc: '서울 강남구 역삼로 305', tip: '인기 회식 장소 / 숙성 생고기 전문', lat: 37.5015, lng: 127.0455, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/38291920/home' },
+            { id: 11, category: 'family', isHot: true, badge: '고깃집/회식', badgeClass: 'badge-family', name: '배꼽집 선릉점', loc: '서울 강남구 선릉로 424', tip: '직장인 점심 특선 불고기 및 한우 전문', lat: 37.5046, lng: 127.0478, image: '', link: 'https://m.place.naver.com/restaurant/36291925/home' }
+        ];
 
-    // 대규모 데이터베이스 연동 및 세분화 카테고리/인기맛집 시뮬레이션
-    function simulateLargeScaleBackendProxy() {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                let baseData = [
-                    { id: 1, category: 'fast', isHot: true, badge: '패스트푸드', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', tip: '위생등급 매우우수 / 직장인 점심 만남의 장소', menu: '상하이 버거 세트', lat: 37.5045, lng: 127.0489, image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/31191024/home' },
-                    { id: 2, category: 'fast', isHot: false, badge: '패스트푸드', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', tip: '위생등급 우수', menu: '통새우와퍼', lat: 37.5049, lng: 127.0482, image: '', link: 'https://m.place.naver.com/restaurant/35324519/home' }, // 이미지 누락 테스트용 빈값
-                    { id: 3, category: 'salad', isHot: true, badge: '샐러드/포케', badgeClass: 'badge-salad', name: '포케올데이 선릉역점', loc: '서울 강남구 언주로 415', tip: '인기 추천 맛집 / 신선한 해산물 포케', menu: '연어 프로틴 포케', lat: 37.5032, lng: 127.0441, image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/1849204928/home' },
-                    { id: 4, category: 'cafe', isHot: true, badge: '카페', badgeClass: 'badge-cafe', name: '스타벅스 선릉역점', loc: '서울 강남구 테헤란로 334', tip: '테헤란로 대형 휴게음식점 / 모임 최적', menu: '아메리카노', lat: 37.5038, lng: 127.0495, image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/35728491/home' },
-                    { id: 5, category: 'meal', isHot: true, badge: '한식', badgeClass: 'badge-meal', name: '북창동순두부 선릉2호점', loc: '서울 강남구 선릉로82길 15', tip: '인기 추천 / 갓 지은 돌솥밥과 찌개', menu: '북창동순두부', lat: 37.5031, lng: 127.0485, image: 'https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/11872938/home' },
-                    { id: 6, category: 'chineses', isHot: true, badge: '중식', badgeClass: 'badge-chineses', name: '홍콩반점0410 선릉점', loc: '서울 강남구 테헤란로 325', tip: '직장인 인기 중식당 / 탕수육 맛집', menu: '고추짬뽕, 탕수육', lat: 37.5042, lng: 127.0470, image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/37281921/home' },
-                    { id: 7, category: 'japanese', isHot: true, badge: '일식', badgeClass: 'badge-japanese', name: '스바루 일식 전문점', loc: '서울 강남구 선릉로 420', tip: '수제 메밀소바 및 정통 일식', menu: '모둠카츠 정식', lat: 37.5050, lng: 127.0470, image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/19283920/home' },
-                    { id: 8, category: 'family', isHot: true, badge: '고깃집/회식', badgeClass: 'badge-family', name: '선릉역 삼겹살 명가', loc: '서울 강남구 역삼로 305', tip: '회식 장소 추천 / 숙성 생고기 전문', menu: '숙성 삼겹살', lat: 37.5015, lng: 127.0455, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80', link: 'https://m.place.naver.com/restaurant/38291920/home' }
-                ];
-                resolve(baseData);
-            }, 500);
-        });
+        calculateDistances(currentCenter.lat, currentCenter.lng);
+        renderCards(franchiseData);
+        renderMarkersAndCluster(franchiseData);
     }
 
     function getDistance(lat1, lon1, lat2, lon2) {
@@ -339,12 +327,12 @@
             const infowindow = new kakao.maps.InfoWindow({ content: content, removable: true });
 
             kakao.maps.event.addListener(marker, 'click', function() {
-                // 이전 열려있는 인포윈도우 닫기
+                // 이전 열려있는 인포윈도우가 있다면 닫기
                 if (currentInfowindow) {
                     currentInfowindow.close();
                 }
                 infowindow.open(map, marker);
-                currentInfowindow = infowindow;
+                currentInfowindow = infowindow; // 현재 창으로 등록
             });
 
             return marker;
@@ -367,7 +355,7 @@
                 ? (item.distance / 1000).toFixed(1) + ' km' 
                 : Math.round(item.distance) + ' m';
 
-            // 대표 이미지가 없거나 깨질 경우를 대비한 기본 대체 이미지 처리
+            // 대표 이미지가 없을 때 깨짐 방지 기본 대체 이미지
             const fallbackImg = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80';
             const imgSrc = (item.image && item.image.trim() !== '') ? item.image : fallbackImg;
 
@@ -397,7 +385,7 @@
                         <p class="fran-dist">🏃 현 위치에서 약 ${distText}</p>
                     </div>
                     <div class="fran-details">
-                        <span><strong>특징:</strong> ${item.tip}</span>
+                        <span>${item.tip}</span>
                     </div>
                 </div>
             `;
