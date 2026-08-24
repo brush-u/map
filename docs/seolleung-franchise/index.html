@@ -86,7 +86,7 @@
             overflow-y: auto;
             padding-right: 4px;
         }
-        /* 완벽한 원형 썸네일 카드로 수정 */
+        /* 원형 썸네일 카드 디자인 */
         .fran-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -171,48 +171,39 @@
             color: #0284c7;
         }
 
-        /* 완전히 동그란 모양(Circle)의 지도 오버레이 디자인 */
-        .circle-bubble {
+        /* 부드러운 사각박스형 말풍선 오버레이 디자인 */
+        .soft-box-bubble {
             position: relative;
             background: #ffffff;
-            border: 3px solid #2563eb;
-            width: 110px;
-            height: 110px;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            border: 1px solid #cbd5e1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            padding: 8px;
-            box-sizing: border-box;
+            width: 170px;
+            bottom: 40px;
+            left: -85px;
             cursor: pointer;
-            left: -55px;
-            bottom: 55px;
-            transition: transform 0.2s, background-color 0.2s;
+            transition: box-shadow 0.2s;
         }
-        .circle-bubble:hover {
-            transform: scale(1.08);
-            background-color: #f8fafc;
+        .soft-box-bubble:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.22);
         }
-        .circle-bubble .shop-name {
-            font-size: 11px;
+        .soft-box-bubble .shop-name {
+            font-size: 13px;
             font-weight: 700;
-            color: #1e293b;
+            color: #2563eb;
             text-decoration: underline;
+            margin-bottom: 3px;
+            display: block;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            line-height: 1.2;
-            margin-bottom: 2px;
         }
-        .circle-bubble .shop-dist {
-            font-size: 10px;
-            font-weight: 600;
+        .soft-box-bubble .shop-info {
+            font-size: 11px;
             color: #0284c7;
+            font-weight: 600;
         }
 
         .loading-box {
@@ -229,7 +220,7 @@
 <div class="franchise-hub-container">
     <div class="hub-header">
         <h2>🏛️ 선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵</h2>
-        <p>완전한 원형 썸네일, 정원형 클릭형 오버레이 및 누락 없는 데이터셋 반영</p>
+        <p>전체 목록 유지, 부드러운 사각박스 오버레이 및 안전한 검색엔진 링크 연동</p>
     </div>
 
     <!-- 카카오 지도 영역 -->
@@ -289,7 +280,7 @@
     }
 
     function loadCurationData() {
-        // 전체 원본 데이터셋 정의
+        // 전체 원본 데이터셋 정의 (누락 없이 모두 포함)
         franchiseData = [
             { id: 1, category: 'fast', isHot: true, badge: '패스트푸드', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', tip: '위생등급 매우우수', lat: 37.5045, lng: 127.0489, image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/31191024/home' },
             { id: 2, category: 'fast', isHot: false, badge: '패스트푸드', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', tip: '통새우와퍼 인기', lat: 37.5049, lng: 127.0482, image: '', link: '' },
@@ -313,7 +304,7 @@
         if (item.link && item.link.trim() !== '') {
             return item.link;
         }
-        // 네이버 모바일 통합 검색 결과로 안전하게 대체 연결
+        // 플레이스 링크가 없을 경우 네이버 모바일 통합 검색 결과로 안전하게 대체 연결
         return `https://m.search.naver.com/search.naver?query=${encodeURIComponent(item.name)}`;
     }
 
@@ -349,7 +340,6 @@
                 calculateDistances(userLat, userLng);
                 franchiseData.sort((a, b) => a.distance - b.distance);
 
-                // 현재 활성화된 필터 유지하며 렌더링
                 applyCurrentFilterAndRender();
             }, function() {
                 alert('위치 정보를 가져올 수 없습니다.');
@@ -368,12 +358,12 @@
 
             const targetUrl = getValidLink(item);
 
-            // 완전한 정원형(Circle) 커스텀 오버레이 생성 및 클릭 이벤트 보장
+            // 부드러운 사각박스형 오버레이 생성 및 상호 클릭 이동 보장
             const content = document.createElement('div');
-            content.className = 'circle-bubble';
+            content.className = 'soft-box-bubble';
             content.innerHTML = `
-                <div class="shop-name">${item.name}</div>
-                <div class="shop-dist">${Math.round(item.distance)}m</div>
+                <span class="shop-name">${item.name}</span>
+                <span class="shop-info">거리: ${Math.round(item.distance)}m (${item.tip})</span>
             `;
 
             content.onclick = function(e) {
@@ -384,7 +374,7 @@
             const customOverlay = new kakao.maps.CustomOverlay({
                 position: coords,
                 content: content,
-                yAnchor: 0.5
+                yAnchor: 1.15
             });
 
             kakao.maps.event.addListener(marker, 'click', function() {
@@ -427,7 +417,7 @@
             };
 
             card.innerHTML = `
-                <div class="fran-img-wrapper">
+                <div class="ns-img-wrapper fran-img-wrapper">
                     <img src="${imgSrc}" class="fran-img" alt="${item.name}" onerror="this.src='${fallbackImg}'">
                 </div>
                 <div class="fran-content">
