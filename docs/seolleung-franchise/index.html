@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>선릉·역삼 8대 외식 프랜차이즈 마스터 큐레이션 맵 (전체 완벽 복원)</title>
+    <title>선릉·역삼 외식 프랜차이즈 동적 데이터 연동 큐레이션 맵</title>
     <!-- 카카오 지도 API 및 클러스터러 라이브러리 -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=clusterer"></script>
     <style>
@@ -140,7 +140,6 @@
             padding: 2px 6px;
             border-radius: 4px;
         }
-        /* 8대 그룹별 디자인 배지 */
         .badge-korean { background: #fee2e2; color: #991b1b; }
         .badge-chicken { background: #ffedd5; color: #9a3412; }
         .badge-japanese { background: #fae8ff; color: #701a75; }
@@ -226,8 +225,8 @@
 
 <div class="franchise-hub-container">
     <div class="hub-header">
-        <h2>🏛️ 선릉·역삼 8대 외식 프랜차이즈 마스터 큐레이션 맵</h2>
-        <p>공정위 외식 업종 8대 표준 분류 전 브랜드 완벽 수용 + 상호명 기반 정밀 카카오맵 연동</p>
+        <h2>🏛️ 선릉·역삼 외식 프랜차이즈 동적 연동 큐레이션 맵</h2>
+        <p>외부 데이터 소스(JSON/API) 비동기 연동을 통한 확장형 아키텍처</p>
     </div>
 
     <!-- 카카오 지도 영역 -->
@@ -252,122 +251,54 @@
 
     <!-- 상세 정보 카드 목록 -->
     <div class="card-grid" id="card-container">
-        <div class="loading-box">🔄 데이터를 불러오는 중입니다...</div>
+        <div class="loading-box">🔄 외부 데이터 소스에서 데이터를 불러오는 중입니다...</div>
     </div>
 </div>
 
 <script>
     let masterFranchiseData = [];
-
-    const sampleImages = {
-        korean: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=200&q=80',
-        chicken_pizza: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=200&q=80',
-        japanese: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=200&q=80',
-        chinese: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=200&q=80',
-        fast: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80',
-        bunsik: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=200&q=80',
-        western: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=200&q=80',
-        cafe_dessert: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=200&q=80'
-    };
-
-    // 선릉·역삼 상권 내 공정위 8대 표준 분류 전체 브랜드 및 지점 데이터 전면 복원 (누락 없음)
-    function loadMasterData() {
-        masterFranchiseData = [
-            // [1. 한식 및 육류]
-            { id: 1, category: 'korean', brandGroup: '명륜진사갈비', isHot: true, badge: '육류/구이', badgeClass: 'badge-korean', name: '명륜진사갈비 선릉역점', loc: '서울 강남구 테헤란로64길 9', phone: '02-568-9292', tip: '돼지갈비 무한리필 전문', lat: 37.5038, lng: 127.0505, image: sampleImages.korean },
-            { id: 2, category: 'korean', brandGroup: '하남돼지집', isHot: true, badge: '육류/구이', badgeClass: 'badge-korean', name: '하남돼지집 선릉1호점', loc: '서울 강남구 선릉로86길 12', phone: '02-563-9232', tip: '초벌구이 삼겹살 전문', lat: 37.5034, lng: 127.0491, image: sampleImages.korean },
-            { id: 3, category: 'korean', brandGroup: '이차돌', isHot: false, badge: '육류/구이', badgeClass: 'badge-korean', name: '이차돌 선릉역점', loc: '서울 강남구 테헤란로 322', phone: '02-554-2220', tip: '차돌박이 전문점', lat: 37.5042, lng: 127.0468, image: sampleImages.korean },
-            { id: 4, category: 'korean', brandGroup: '한마음정육식당', isHot: false, badge: '육류/구이', badgeClass: 'badge-korean', name: '한마음정육식당 선릉점', loc: '서울 강남구 테헤란로51길 19', phone: '02-565-3392', tip: '숙성 생고기 전문', lat: 37.5061, lng: 127.0468, image: sampleImages.korean },
-            { id: 5, category: 'korean', brandGroup: '본죽', isHot: false, badge: '식사/국밥', badgeClass: 'badge-korean', name: '본죽&비비비빔밥 선릉역점', loc: '서울 강남구 선릉로 431', phone: '02-567-6288', tip: '건강죽 및 비빔밥', lat: 37.5051, lng: 127.0487, image: sampleImages.korean },
-            { id: 6, category: 'korean', brandGroup: '한솥도시락', isHot: false, badge: '식사/국밥', badgeClass: 'badge-korean', name: '한솥도시락 선릉역점', loc: '서울 강남구 테헤란로70길 12', phone: '02-558-1004', tip: '가성비 도시락 전문', lat: 37.5049, lng: 127.0521, image: sampleImages.korean },
-            { id: 7, category: 'korean', brandGroup: '무봉리토종순대국', isHot: true, badge: '식사/국밥', badgeClass: 'badge-korean', name: '무봉리토종순대국 선릉점', loc: '서울 강남구 선릉로86길 34', phone: '02-555-8272', tip: '토종순대 및 사골국밥', lat: 37.5030, lng: 127.0499, image: sampleImages.korean },
-            { id: 8, category: 'korean', brandGroup: '이바돔감자탕', isHot: false, badge: '식사/국밥', badgeClass: 'badge-korean', name: '이바돔감자탕 선릉점', loc: '서울 강남구 테헤란로 315', phone: '02-566-1919', tip: '뼈다귀 감자탕 전문', lat: 37.5043, lng: 127.0488, image: sampleImages.korean },
-            { id: 9, category: 'korean', brandGroup: '원할머니보쌈', isHot: true, badge: '족발/보쌈', badgeClass: 'badge-korean', name: '원할머니보쌈족발 선릉역점', loc: '서울 강남구 테헤란로51길 7', phone: '02-569-5353', tip: '보쌈 및 족발 전문', lat: 37.5055, lng: 127.0462, image: sampleImages.korean },
-            { id: 10, category: 'korean', brandGroup: '놀부보쌈', isHot: false, badge: '족발/보쌈', badgeClass: 'badge-korean', name: '놀부보쌈 선릉점', loc: '서울 강남구 선릉로 425', phone: '02-553-5382', tip: '오리지널 보쌈 전문', lat: 37.5047, lng: 127.0475, image: sampleImages.korean },
-            { id: 11, category: 'korean', brandGroup: '가장맛있는족발', isHot: true, badge: '족발/보쌈', badgeClass: 'badge-korean', name: '가장맛있는족발 선릉점', loc: '서울 강남구 선릉로86길 20', phone: '02-557-5849', tip: '족발 및 보쌈 인기', lat: 37.5032, lng: 127.0496, image: sampleImages.korean },
-
-            // [2. 치킨 및 피자]
-            { id: 12, category: 'chicken_pizza', brandGroup: '교촌치킨', isHot: true, badge: '치킨', badgeClass: 'badge-chicken', name: '교촌치킨 선릉점', loc: '서울 강남구 선릉로86길 28', phone: '02-558-1992', tip: '허니콤보 및 레드콤보', lat: 37.5029, lng: 127.0498, image: sampleImages.chicken_pizza },
-            { id: 13, category: 'chicken_pizza', brandGroup: 'bhc치킨', isHot: true, badge: '치킨', badgeClass: 'badge-chicken', name: 'bhc치킨 선릉역점', loc: '서울 강남구 테헤란로 313', phone: '02-563-9288', tip: '뿌링클 및 맛초킹', lat: 37.5044, lng: 127.0492, image: sampleImages.chicken_pizza },
-            { id: 14, category: 'chicken_pizza', brandGroup: '푸라닭', isHot: false, badge: '치킨', badgeClass: 'badge-chicken', name: '푸라닭 선릉점', loc: '서울 강남구 언주로98길 25', phone: '02-562-9206', tip: '블랙투움바 치킨', lat: 37.5021, lng: 127.0445, image: sampleImages.chicken_pizza },
-            { id: 15, category: 'chicken_pizza', brandGroup: '굽네치킨', isHot: false, badge: '치킨', badgeClass: 'badge-chicken', name: '굽네치킨 역삼선릉점', loc: '서울 강남구 역삼로 222', phone: '02-566-9282', tip: '고추바사삭 오븐구이', lat: 37.5011, lng: 127.0428, image: sampleImages.chicken_pizza },
-            { id: 16, category: 'chicken_pizza', brandGroup: '가마치통닭', isHot: true, badge: '치킨', badgeClass: 'badge-chicken', name: '가마치통닭 선릉점', loc: '서울 강남구 선릉로 422', phone: '02-568-9220', tip: '옛날통닭 및 닭똥집', lat: 37.5049, lng: 127.0474, image: sampleImages.chicken_pizza },
-            { id: 17, category: 'chicken_pizza', brandGroup: '도미노피자', isHot: true, badge: '피자', badgeClass: 'badge-chicken', name: '도미노피자 선릉점', loc: '서울 강남구 테헤란로 309', phone: '02-562-3082', tip: '배달 및 포장 할인', lat: 37.5046, lng: 127.0480, image: sampleImages.chicken_pizza },
-            { id: 18, category: 'chicken_pizza', brandGroup: '피자헛', isHot: false, badge: '피자', badgeClass: 'badge-chicken', name: '피자헛 선릉역점', loc: '서울 강남구 테헤란로 326', phone: '02-557-1588', tip: '프리미엄 피자 전문', lat: 37.5040, lng: 127.0461, image: sampleImages.chicken_pizza },
-            { id: 19, category: 'chicken_pizza', brandGroup: '파파존스', isHot: false, badge: '피자', badgeClass: 'badge-chicken', name: '파파존스 선릉점', loc: '서울 강남구 테헤란로 330', phone: '02-558-8080', tip: '수제 도우 및 갈릭소스', lat: 37.5039, lng: 127.0468, image: sampleImages.chicken_pizza },
-            { id: 20, category: 'chicken_pizza', brandGroup: '반올림피자', isHot: false, badge: '피자', badgeClass: 'badge-chicken', name: '반올림피자 선릉점', loc: '서울 강남구 선릉로 420', phone: '02-565-8599', tip: '반올림 고구마 피자', lat: 37.5050, lng: 127.0471, image: sampleImages.chicken_pizza },
-            { id: 21, category: 'chicken_pizza', brandGroup: '피자알볼로', isHot: false, badge: '피자', badgeClass: 'badge-chicken', name: '피자알볼로 선릉점', loc: '서울 강남구 테헤란로51길 5', phone: '02-564-8484', tip: '웰빙 수제 피자', lat: 37.5057, lng: 127.0461, image: sampleImages.chicken_pizza },
-
-            // [3. 일식 및 돈가스]
-            { id: 22, category: 'japanese', brandGroup: '미소야', isHot: false, badge: '돈가스/우동', badgeClass: 'badge-japanese', name: '미소야 선릉점', loc: '서울 강남구 테헤란로 310', phone: '02-553-3322', tip: '돈카츠 및 우동 전문', lat: 37.5037, lng: 127.0458, image: sampleImages.japanese },
-            { id: 23, category: 'japanese', brandGroup: '백소정', isHot: true, badge: '돈가스/마제소바', badgeClass: 'badge-japanese', name: '백소정 선릉역점', loc: '서울 강남구 테헤란로 313', phone: '02-566-8802', tip: '마제소바 및 돈카츠 전문', lat: 37.5043, lng: 127.0490, image: sampleImages.japanese },
-            { id: 24, category: 'japanese', brandGroup: '역전우동0410', isHot: false, badge: '돈가스/우동', badgeClass: 'badge-japanese', name: '역전우동0410 선릉역점', loc: '서울 강남구 선릉로 424', phone: '02-569-0410', tip: '가성비 우동 및 덮밥', lat: 37.5048, lng: 127.0473, image: sampleImages.japanese },
-            { id: 25, category: 'japanese', brandGroup: '홍익돈까스', isHot: true, badge: '돈가스/우동', badgeClass: 'badge-japanese', name: '홍익돈까스 선릉점', loc: '서울 강남구 테헤란로64길 14', phone: '02-508-7333', tip: '수제 왕돈까스 전문', lat: 37.5039, lng: 127.0507, image: sampleImages.japanese },
-            { id: 26, category: 'japanese', brandGroup: '무모한초밥', isHot: false, badge: '초밥/라멘', badgeClass: 'badge-japanese', name: '무모한초밥 선릉점', loc: '서울 강남구 테헤란로51길 13', phone: '02-567-3366', tip: '가성비 싱싱 초밥', lat: 37.5057, lng: 127.0463, image: sampleImages.japanese },
-            { id: 27, category: 'japanese', brandGroup: '고메스퀘어', isHot: true, badge: '초밥/라멘', badgeClass: 'badge-japanese', name: '고메스퀘어 선릉점', loc: '서울 강남구 테헤란로 401', phone: '02-552-6789', tip: '프리미엄 초밥 뷔페', lat: 37.5052, lng: 127.0504, image: sampleImages.japanese },
-            { id: 28, category: 'japanese', brandGroup: '아비꼬', isHot: true, badge: '초밥/라멘', badgeClass: 'badge-japanese', name: '아비꼬 선릉역점', loc: '서울 강남구 선릉로86길 10', phone: '02-561-1230', tip: '매운 카레 전문점', lat: 37.5035, lng: 127.0489, image: sampleImages.japanese },
-
-            // [4. 중식]
-            { id: 29, category: 'chinese', brandGroup: '홍콩반점0410', isHot: true, badge: '대중중식', badgeClass: 'badge-chinese', name: '홍콩반점0410 선릉점', loc: '서울 강남구 테헤란로 325', phone: '02-538-0410', tip: '탕수육 및 짜장/짬뽕', lat: 37.5042, lng: 127.0470, image: sampleImages.chinese },
-            { id: 30, category: 'chinese', brandGroup: '보배반점', isHot: true, badge: '대중중식', badgeClass: 'badge-chinese', name: '보배반점 선릉점', loc: '서울 강남구 테헤란로51길 15', phone: '02-565-1102', tip: '소고기짬뽕 및 차돌짬뽕', lat: 37.5058, lng: 127.0465, image: sampleImages.chinese },
-            { id: 31, category: 'chinese', brandGroup: '이비가짬뽕', isHot: false, badge: '대중중식', badgeClass: 'badge-chinese', name: '이비가짬뽕 선릉역점', loc: '서울 강남구 선릉로 429', phone: '02-558-7474', tip: '알칼리 사골 짬뽕', lat: 37.5051, lng: 127.0484, image: sampleImages.chinese },
-            { id: 32, category: 'chinese', brandGroup: '탕화공방', isHot: true, badge: '마라탕/양꼬치', badgeClass: 'badge-chinese', name: '탕화공방마라탕 선릉점', loc: '서울 강남구 선릉로 428', phone: '02-555-8820', tip: '맞춤형 마라탕 전문', lat: 37.5050, lng: 127.0481, image: sampleImages.chinese },
-            { id: 33, category: 'chinese', brandGroup: '소림마라', isHot: false, badge: '마라탕/양꼬치', badgeClass: 'badge-chinese', name: '소림마라 선릉점', loc: '서울 강남구 선릉로86길 16', phone: '02-562-6688', tip: '마라로제 및 마라상궈', lat: 37.5033, lng: 127.0494, image: sampleImages.chinese },
-            { id: 34, category: 'chinese', brandGroup: '라화쿵부', isHot: false, badge: '마라탕/양꼬치', badgeClass: 'badge-chinese', name: '라화쿵부 선릉역점', loc: '서울 강남구 선릉로86길 8', phone: '02-567-9888', tip: '마라탕 및 꿔바로우', lat: 37.5036, lng: 127.0488, image: sampleImages.chinese },
-
-            // [5. 패스트푸드]
-            { id: 35, category: 'fast', brandGroup: '맥도날드', isHot: true, badge: '버거', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', phone: '02-555-1234', tip: '빅맥 및 맥스파이시', lat: 37.5045, lng: 127.0489, image: sampleImages.fast },
-            { id: 36, category: 'fast', brandGroup: '버거킹', isHot: true, badge: '버거', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', phone: '02-556-5678', tip: '와퍼 및 통새우와퍼', lat: 37.5049, lng: 127.0482, image: sampleImages.fast },
-            { id: 37, category: 'fast', brandGroup: '맘스터치', isHot: false, badge: '버거', badgeClass: 'badge-fast', name: '맘스터치 선릉점', loc: '서울 강남구 선릉로 430', phone: '02-558-8855', tip: '싸이버거 전문', lat: 37.5052, lng: 127.0480, image: sampleImages.fast },
-            { id: 38, category: 'fast', brandGroup: '롯데리아', isHot: false, badge: '버거', badgeClass: 'badge-fast', name: '롯데리아 선릉역점', loc: '서울 강남구 테헤란로 324', phone: '02-553-5522', tip: '불고기버거 및 새우버거', lat: 37.5041, lng: 127.0463, image: sampleImages.fast },
-            { id: 39, category: 'fast', brandGroup: '노브랜드버거', isHot: true, badge: '버거', badgeClass: 'badge-fast', name: '노브랜드버거 선릉점', loc: '서울 강남구 테헤란로 317', phone: '02-552-7722', tip: '가성비 최고 버거', lat: 37.5044, lng: 127.0486, image: sampleImages.fast },
-            { id: 40, category: 'fast', brandGroup: '서브웨이', isHot: true, badge: '샌드위치/토스트', badgeClass: 'badge-fast', name: '서브웨이 선릉역점', loc: '서울 강남구 테헤란로 316', phone: '02-552-0888', tip: '커스텀 샌드위치', lat: 37.5041, lng: 127.0460, image: sampleImages.fast },
-            { id: 41, category: 'fast', brandGroup: '이삭토스트', isHot: false, badge: '샌드위치/토스트', badgeClass: 'badge-fast', name: '이삭토스트 선릉역점', loc: '서울 강남구 선릉로 420', phone: '02-562-7770', tip: '햄스페셜 토스트', lat: 37.5046, lng: 127.0471, image: sampleImages.fast },
-            { id: 42, category: 'fast', brandGroup: '에그드랍', isHot: false, badge: '샌드위치/토스트', badgeClass: 'badge-fast', name: '에그드랍 선릉점', loc: '서울 강남구 테헤란로 329', phone: '02-563-5488', tip: '스위트햄치즈 에그샌드', lat: 37.5042, lng: 127.0476, image: sampleImages.fast },
-
-            // [6. 분식]
-            { id: 43, category: 'bunsik', brandGroup: '동대문엽기떡볶이', isHot: true, badge: '떡볶이 중심', badgeClass: 'badge-bunsik', name: '동대문엽기떡볶이 선릉점', loc: '서울 강남구 선릉로86길 14', phone: '02-568-8592', tip: '매운 엽기떡볶이 전문', lat: 37.5033, lng: 127.0493, image: sampleImages.bunsik },
-            { id: 44, category: 'bunsik', brandGroup: '신전떡볶이', isHot: false, badge: '떡볶이 중심', badgeClass: 'badge-bunsik', name: '신전떡볶이 선릉점', loc: '서울 강남구 테헤란로51길 11', phone: '02-554-6333', tip: '국물 떡볶이 및 오뎅튀김', lat: 37.5056, lng: 127.0464, image: sampleImages.bunsik },
-            { id: 45, category: 'bunsik', brandGroup: '배떡', isHot: false, badge: '떡볶이 중심', badgeClass: 'badge-bunsik', name: '배떡 선릉점', loc: '서울 강남구 선릉로 426', phone: '02-567-2233', tip: '로제떡볶이 원조', lat: 37.5047, lng: 127.0478, image: sampleImages.bunsik },
-            { id: 46, category: 'bunsik', brandGroup: '청년다방', isHot: true, badge: '떡볶이 중심', badgeClass: 'badge-bunsik', name: '청년다방 선릉역점', loc: '서울 강남구 테헤란로64길 18', phone: '02-501-1250', tip: '차돌 떡볶이 & 버터갈릭', lat: 37.5039, lng: 127.0510, image: sampleImages.bunsik },
-            { id: 47, category: 'bunsik', brandGroup: '고봉민김밥인', isHot: false, badge: '종합분식', badgeClass: 'badge-bunsik', name: '고봉민김밥인 선릉역점', loc: '서울 강남구 선릉로 427', phone: '02-557-0033', tip: '돈가스김밥 및 참치김밥', lat: 37.5053, lng: 127.0483, image: sampleImages.bunsik },
-            { id: 48, category: 'bunsik', brandGroup: '김가네', isHot: false, badge: '종합분식', badgeClass: 'badge-bunsik', name: '김가네 선릉점', loc: '서울 강남구 테헤란로 328', phone: '02-561-1588', tip: '분식 및 김밥 전문', lat: 37.5039, lng: 127.0463, image: sampleImages.bunsik },
-            { id: 49, category: 'bunsik', brandGroup: '수유리우동집', isHot: false, badge: '종합분식', badgeClass: 'badge-bunsik', name: '수유리우동집 선릉점', loc: '서울 강남구 테헤란로51길 17', phone: '02-566-4433', tip: '얼큰우동 및 스팸김밥', lat: 37.5059, lng: 127.0465, image: sampleImages.bunsik },
-
-            // [7. 서양식 및 아시안]
-            { id: 50, category: 'western', brandGroup: '아웃백 스테이크하우스', isHot: true, badge: '양식', badgeClass: 'badge-western', name: '아웃백 스테이크하우스 선릉점', loc: '서울 강남구 테헤란로 402', phone: '02-563-1761', tip: '투움바 파스타 & 스테이크', lat: 37.5053, lng: 127.0508, image: sampleImages.western },
-            { id: 51, category: 'western', brandGroup: '롤링파스타', isHot: true, badge: '양식', badgeClass: 'badge-western', name: '롤링파스타 선릉역점', loc: '서울 강남구 테헤란로 323', phone: '02-552-0410', tip: '가성비 파스타 전문점', lat: 37.5043, lng: 127.0478, image: sampleImages.western },
-            { id: 52, category: 'western', brandGroup: '애슐리퀸즈', isHot: false, badge: '양식', badgeClass: 'badge-western', name: '애슐리퀸즈 선릉역점', loc: '서울 강남구 테헤란로 310', phone: '02-553-1031', tip: '프리미엄 뷔페 레스토랑', lat: 37.5036, lng: 127.0455, image: sampleImages.western },
-            { id: 53, category: 'western', brandGroup: '미즈컨테이너', isHot: false, badge: '양식', badgeClass: 'badge-western', name: '미즈컨테이너 선릉점', loc: '서울 강남구 테헤란로64길 13', phone: '02-508-2233', tip: '샐러드파스타 & 바베큐플레이트', lat: 37.5038, lng: 127.0506, image: sampleImages.western },
-            { id: 54, category: 'western', brandGroup: '미스사이공', isHot: false, badge: '아시안 푸드', badgeClass: 'badge-western', name: '미스사이공 선릉점', loc: '서울 강남구 테헤란로51길 9', phone: '02-561-4200', tip: '베트남 쌀국수 전문', lat: 37.5054, lng: 127.0463, image: sampleImages.western },
-            { id: 55, category: 'western', brandGroup: '인더비엣', isHot: true, badge: '아시안 푸드', badgeClass: 'badge-western', name: '인더비엣 선릉점', loc: '서울 강남구 선릉로86길 6', phone: '02-554-3322', tip: '본토 스타일 베트남 요리', lat: 37.5036, lng: 127.0490, image: sampleImages.western },
-            { id: 56, category: 'western', brandGroup: '생어거스틴', isHot: false, badge: '아시안 푸드', badgeClass: 'badge-western', name: '생어거스틴 선릉역점', loc: '서울 강남구 테헤란로 335', phone: '02-558-1155', tip: '뿌팟퐁커리 및 태국 요리', lat: 37.5037, lng: 127.0496, image: sampleImages.western },
-
-            // [8. 카페 및 디저트]
-            { id: 57, category: 'cafe_dessert', brandGroup: '메가MGC커피', isHot: true, badge: '커피 전문점', badgeClass: 'badge-cafe', name: '메가MGC커피 선릉점', loc: '서울 강남구 테헤란로 316', phone: '02-566-0707', tip: '대용량 가성비 음료', lat: 37.5041, lng: 127.0460, image: sampleImages.cafe_dessert },
-            { id: 58, category: 'cafe_dessert', brandGroup: '컴포즈커피', isHot: false, badge: '커피 전문점', badgeClass: 'badge-cafe', name: '컴포즈커피 선릉역점', loc: '서울 강남구 선릉로 423', phone: '02-569-1122', tip: '진한 에스프레소 및 와플', lat: 37.5048, lng: 127.0472, image: sampleImages.cafe_dessert },
-            { id: 59, category: 'cafe_dessert', brandGroup: '빽다방', isHot: true, badge: '커피 전문점', badgeClass: 'badge-cafe', name: '빽다방 선릉역점', loc: '서울 강남구 테헤란로 321', phone: '02-554-0410', tip: '앗!메리카노 및 빽사이즈', lat: 37.5043, lng: 127.0474, image: sampleImages.cafe_dessert },
-            { id: 60, category: 'cafe_dessert', brandGroup: '투썸플레이스', isHot: true, badge: '커피 전문점', badgeClass: 'badge-cafe', name: '투썸플레이스 선릉점', loc: '서울 강남구 테헤란로 327', phone: '02-557-2323', tip: '케이크 및 프리미엄 디저트', lat: 37.5043, lng: 127.0475, image: sampleImages.cafe_dessert },
-            { id: 61, category: 'cafe_dessert', brandGroup: '이디야커피', isHot: false, badge: '커피 전문점', badgeClass: 'badge-cafe', name: '이디야커피 선릉역점', loc: '서울 강남구 선릉로 420', phone: '02-562-3311', tip: '부담 없는 편안한 카페', lat: 37.5046, lng: 127.0471, image: sampleImages.cafe_dessert },
-            { id: 62, category: 'cafe_dessert', brandGroup: '파리바게뜨', isHot: false, badge: '베이커리/디저트', badgeClass: 'badge-cafe', name: '파리바게뜨 선릉역점', loc: '서울 강남구 테헤란로 318', phone: '02-563-8204', tip: '갓 구운 빵 및 샌드위치', lat: 37.5040, lng: 127.0466, image: sampleImages.cafe_dessert },
-            { id: 63, category: 'cafe_dessert', brandGroup: '뚜레쥬르', isHot: false, badge: '베이커리/디저트', badgeClass: 'badge-cafe', name: '뚜레쥬르 선릉점', loc: '서울 강남구 테헤란로 312', phone: '02-553-9200', tip: '건강한 베이커리', lat: 37.5038, lng: 127.0457, image: sampleImages.cafe_dessert },
-            { id: 64, category: 'cafe_dessert', brandGroup: '배스킨라빈스', isHot: true, badge: '베이커리/디저트', badgeClass: 'badge-cafe', name: '배스킨라빈스 선릉역점', loc: '서울 강남구 선릉로 426', phone: '02-569-3131', tip: '프리미엄 아이스크림', lat: 37.5047, lng: 127.0478, image: sampleImages.cafe_dessert },
-            { id: 65, category: 'cafe_dessert', brandGroup: '설빙', isHot: false, badge: '베이커리/디저트', badgeClass: 'badge-cafe', name: '설빙 선릉역점', loc: '서울 강남구 선릉로86길 11', phone: '02-562-0908', tip: '인절미설빙 및 디저트', lat: 37.5034, lng: 127.0487, image: sampleImages.cafe_dessert },
-            { id: 66, category: 'cafe_dessert', brandGroup: '던킨', isHot: false, badge: '베이커리/디저트', badgeClass: 'badge-cafe', name: '던킨 선릉역점', loc: '서울 강남구 테헤란로 315', phone: '02-555-3221', tip: '도넛 및 커피 세트', lat: 37.5042, lng: 127.0485, image: sampleImages.cafe_dessert }
-        ];
-
-        // 전체 카운트 표시 업데이트
-        document.getElementById('count-all').innerText = masterFranchiseData.length;
-    }
-
     let map;
     let clusterer;
     let currentCenter = { lat: 37.5045, lng: 127.0485 };
     let currentOverlay = null;
 
-    function initMap() {
-        loadMasterData();
+    // [동적 데이터 로드 함수] 외부 JSON 파일 로드 실패 시 이미지 예시 데이터(솥내음 등)를 기본 탑재하도록 예외 처리 추가
+    async function fetchFranchiseData() {
+        try {
+            const response = await fetch('./data/seolleung_franchises.json');
+            
+            if (!response.ok) {
+                throw new Error('데이터를 성공적으로 불러오지 못했습니다.');
+            }
+            
+            masterFranchiseData = await response.json();
+        } catch (error) {
+            console.warn('외부 데이터 로드 실패, 기본 샘플 데이터셋으로 대체합니다.', error);
+            
+            // 이미지 예시(솥내음 강남 역삼 선릉역점)를 포함한 기본 샘플 데이터 구조
+            masterFranchiseData = [
+                {
+                    name: "솥내음 강남 역삼 선릉역점",
+                    category: "korean",
+                    badgeClass: "badge-korean",
+                    badge: "한식당",
+                    brandGroup: "한식·육류",
+                    isHot: true,
+                    loc: "서울특별시 강남구 선릉로93길 8 솥내음 2층",
+                    phone: "02-555-9233",
+                    tip: "평점 4.9 · 깔끔한 솥밥 메뉴",
+                    lat: 37.5050,
+                    lng: 127.0480,
+                    image: "" // 이미지 경로 지정 가능
+                }
+            ];
+        }
 
+        document.getElementById('count-all').innerText = masterFranchiseData.length;
+        applyCurrentFilterAndRender();
+    }
+
+    function initMap() {
         const mapContainer = document.getElementById('map');
         const mapOption = {
             center: new kakao.maps.LatLng(currentCenter.lat, currentCenter.lng),
@@ -388,11 +319,9 @@
             minLevel: 5
         });
 
-        updateAllDistances(currentCenter.lat, currentCenter.lng);
-        applyCurrentFilterAndRender();
+        fetchFranchiseData();
     }
 
-    // [정밀 연동] 상호명 키워드 검색 전용 카카오맵 링크 생성
     function getMapLink(item) {
         return `https://map.kakao.com/link/search/${encodeURIComponent(item.name)}`;
     }
@@ -483,14 +412,14 @@
         container.innerHTML = '';
 
         if(data.length === 0) {
-            container.innerHTML = '<div class="loading-box">선택하신 카테고리에 해당하는 매장이 없습니다.</div>';
+            container.innerHTML = '<div class="loading-box">표출할 데이터가 없거나 데이터를 불러오는 중입니다.</div>';
             return;
         }
 
         data.forEach(item => {
-            const distText = item.distance >= 1000 
+            const distText = item.distance !== undefined ? (item.distance >= 1000 
                 ? (item.distance / 1000).toFixed(1) + ' km' 
-                : Math.round(item.distance) + ' m';
+                : Math.round(item.distance) + ' m') : '거리 계산 전';
 
             const targetUrl = getMapLink(item);
             const card = document.createElement('div');
@@ -502,7 +431,7 @@
 
             card.innerHTML = `
                 <div class="fran-img-wrapper">
-                    <img src="${item.image}" class="fran-img" alt="${item.name}">
+                    <img src="${item.image || 'https://via.placeholder.com/64'}" class="fran-img" alt="${item.name}">
                 </div>
                 <div class="fran-content">
                     <div>
