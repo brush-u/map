@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>선릉·역삼 스마트 프랜차이즈 지도 맵</title>
+    <!-- 카카오 지도 API (appkey 자리에 본인의 카카오 개발자 자바스크립트 키를 입력하세요. 테스트용으로 기본 오픈키 사용 시 도메인 등록 필요) -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KAKAO_APP_KEY"></script>
+    <style>
+        .franchise-hub-container {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .hub-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .hub-header h2 {
+            font-size: 1.6rem;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+        .hub-header p {
+            font-size: 0.95rem;
+            color: #475569;
+        }
+        /* 지도 영역 스타일 */
+        #map {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            margin-bottom: 24px;
+        }
+        /* 필터 버튼 스타일 */
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn.active, .filter-btn:hover {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+        }
+        /* 상세 정보 카드 그리드 */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .fran-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .fran-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+        }
+        .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .badge-cafe { background: #fef3c7; color: #92400e; }
+        .badge-fast { background: #fee2e2; color: #991b1b; }
+        .badge-salad { background: #dcfce7; color: #166534; }
+        .badge-meal { background: #e0f2fe; color: #0369a1; }
+        
+        .fran-card h3 {
+            font-size: 1.1rem;
+            color: #1e293b;
+            margin: 0 0 6px 0;
+        }
+        .fran-loc {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .fran-details {
+            font-size: 0.88rem;
+            color: #334155;
+            background: #f1f5f9;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+        .fran-details ul {
+            margin: 0;
+            padding-left: 16px;
+        }
+        .fran-details li {
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="franchise-hub-container">
+    <div class="hub-header">
+        <h2>🍔 선릉·역삼 직장인 필수 프랜차이즈 큐레이션 맵</h2>
+        <p>점심 피크타임 회전율 높은 맛집부터 샐러드, 카페까지 완벽 가이드!</p>
+    </div>
+
+    <!-- 카카오 지도 영역 -->
+    <div id="map"></div>
+
+    <!-- 카테고리 필터 -->
+    <div class="filter-buttons">
+        <button class="filter-btn active" onclick="filterCategory('all')">전체 보기</button>
+        <button class="filter-btn" onclick="filterCategory('fast')">패스트푸드/버거</button>
+        <button class="filter-btn" onclick="filterCategory('salad')">샐러드/다이어트</button>
+        <button class="filter-btn" onclick="filterCategory('cafe')">카페/디저트</button>
+        <button class="filter-btn" onclick="filterCategory('meal')">한식/면요리</button>
+    </div>
+
+    <!-- 상세 정보 카드 목록 -->
+    <div class="card-grid" id="card-container">
+        <!-- 동적 렌더링될 영역 -->
+    </div>
+</div>
+
+<script>
+    // 프랜차이즈 상세 데이터 (선릉역·역삼역 기준)
+    const franchiseData = [
+        {
+            id: 1,
+            category: 'fast',
+            badge: '패스트푸드',
+            badgeClass: 'badge-fast',
+            name: '맥도날드 선릉점 / 버거킹 선릉역점',
+            loc: '선릉역 1번/2번 출구 도보 2분 내',
+            tip: '직장인 점심 피크타임 회전율이 가장 높음',
+            menu: '맥런치 세트 활용 시 가성비 극대화, 앱 쿠폰 필수',
+            lat: 37.5045,
+            lng: 127.0489
+        },
+        {
+            id: 2,
+            category: 'salad',
+            badge: '샐러드/샌드위치',
+            badgeClass: 'badge-salad',
+            name: '서브웨이 (Subway) 선릉점',
+            loc: '선릉역 테헤란로 인근',
+            tip: '다이어터 및 가벼운 점심 선호 직장인 집중 방문',
+            menu: '우수 꿀조합: 에그마요 + 스위트칠리, 로스트치킨',
+            lat: 37.5052,
+            lng: 127.0465
+        },
+        {
+            id: 3,
+            category: 'salad',
+            badge: '샐러드/포케',
+            badgeClass: 'badge-salad',
+            name: '그린고 서울 (역삼/선릉 인근)',
+            loc: '역삼동 테헤란로 이면도로',
+            tip: '신선한 채소와 포케를 포장/매장 식사 가능',
+            menu: '연어포케, 우삼겹 샐러드 볼',
+            lat: 37.5012,
+            lng: 127.0421
+        },
+        {
+            id: 4,
+            category: 'cafe',
+            badge: '카페/업무공간',
+            badgeClass: 'badge-cafe',
+            name: '스타벅스 선릉역점 / 역삼자이점',
+            loc: '역삼동 및 선릉역 주요 사거리',
+            tip: '사이렌 오더 사전 주문 필수, 테이크아웃 회전 빠름',
+            menu: '디카페인 커피 및 샌드위치 모닝 세트',
+            lat: 37.5038,
+            lng: 127.0495
+        },
+        {
+            id: 5,
+            category: 'meal',
+            badge: '한식/국밥',
+            badgeClass: 'badge-meal',
+            name: '본죽&비빔밥 / 국밥 프랜차이즈',
+            loc: '선릉역 골목 상권',
+            tip: '속 편한 한 끼를 원하거나 감기 기운 있을 때 추천',
+            menu: '쇠고기야채죽, 차돌강된장 비빔밥',
+            lat: 37.5058,
+            lng: 127.0478
+        }
+    ];
+
+    let map;
+    let markers = [];
+
+    // 지도 초기화
+    function initMap() {
+        const mapContainer = document.getElementById('map');
+        const mapOption = {
+            center: new kakao.maps.LatLng(37.5045, 127.0485), // 선릉역 중심 좌표
+            level: 4
+        };
+        map = new kakao.maps.Map(mapContainer, mapOption);
+        renderCards(franchiseData);
+        renderMarkers(franchiseData);
+    }
+
+    // 마커 생성 함수
+    function renderMarkers(data) {
+        // 기존 마커 제거
+        markers.forEach(marker => marker.setMap(null));
+        markers = [];
+
+        data.forEach(item => {
+            const coords = new kakao.maps.LatLng(item.lat, item.lng);
+            const marker = new kakao.maps.Marker({
+                map: map,
+                position: coords
+            });
+
+            // 인포윈도우 추가
+            const infowindow = new kakao.maps.InfoWindow({
+                content: `<div style="padding:5px;font-size:12px;font-weight:bold;">${item.name}</div>`
+            });
+
+            kakao.maps.event.addListener(marker, 'click', function() {
+                infowindow.open(map, marker);
+            });
+
+            markers.push(marker);
+        });
+    }
+
+    // 카드 렌더링 함수
+    function renderCards(data) {
+        const container = document.getElementById('card-container');
+        container.innerHTML = '';
+
+        data.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'fran-card';
+            card.innerHTML = `
+                <span class="badge ${item.badgeClass}">${item.badge}</span>
+                <h3>${item.name}</h3>
+                <p class="fran-loc">📍 ${item.loc}</p>
+                <div class="fran-details">
+                    <ul>
+                        <li><strong>특징:</strong> ${item.tip}</li>
+                        <li><strong>추천 메뉴/꿀팁:</strong> ${item.menu}</li>
+                    </ul>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // 카테고리 필터링
+    function filterCategory(category) {
+        const buttons = document.querySelectorAll('.filter-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        if(category === 'all') {
+            renderCards(franchiseData);
+            renderMarkers(franchiseData);
+        } else {
+            const filtered = franchiseData.filter(item => item.category === category);
+            renderCards(filtered);
+            renderMarkers(filtered);
+        }
+    }
+
+    // 카카오 지도 스크립트 로드 후 실행
+    window.onload = function() {
+        if(typeof kakao !== 'undefined' && kakao.maps) {
+            kakao.maps.load(initMap);
+        } else {
+            // 키가 없거나 로드 대기 시 기본 카드만 우선 렌더링
+            renderCards(franchiseData);
+        }
+    };
+</script>
+
+</body>
+</html>
