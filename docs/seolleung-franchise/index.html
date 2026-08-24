@@ -260,7 +260,6 @@
         document.getElementById('status-text').innerText = '🌐 공공데이터 API 서버에 실시간 데이터 요청 중...';
 
         try {
-            // 비동기 네트워크 통신 모사 (실제 API 호출 시 fetch 코드로 대체 가능)
             const rawData = await new Promise((resolve) => {
                 setTimeout(() => {
                     resolve(getRemoteDummyPayload());
@@ -279,49 +278,84 @@
         }
     }
 
-    // 150개의 풍부한 상권 데이터를 반환하는 원격 페이로드 함수
+    // 선릉·역삼 상권 맞춤형 다채로운 프랜차이즈 풀 (대폭 확장)
     function getRemoteDummyPayload() {
-        const baseBrands = [
-            { name: '스타벅스', cate: '커피숍/카페', addr: '서울특별시 강남구 테헤란로 334' },
-            { name: '투썸플레이스', cate: '커피숍/카페', addr: '서울특별시 강남구 테헤란로 201' },
-            { name: '메가MGC커피', cate: '커피숍/카페', addr: '서울특별시 강남구 역삼로 110' },
-            { name: '컴포즈커피', cate: '커피숍/카페', addr: '서울특별시 강남구 선릉로 430' },
-            { name: '이디야커피', cate: '커피숍/카페', addr: '서울특별시 강남구 논현로 505' },
-            { name: '교촌치킨', cate: '후라이드/양념치킨', addr: '서울특별시 강남구 역삼로 12' },
-            { name: 'BHC치킨', cate: '후라이드/양념치킨', addr: '서울특별시 강남구 테헤란로 150' },
-            { name: 'BBQ올리브치킨', cate: '후라이드/양념치킨', addr: '서울특별시 강남구 선릉로 90길' },
-            { name: '하남돼지집', cate: '육류/삼겹살', addr: '서울특별시 강남구 선릉로 93길 24' },
-            { name: '새마을식당', cate: '육류/삼겹살', addr: '서울특별시 강남구 테헤란로 220' },
-            { name: '육전식당', cate: '육류/삼겹살', addr: '서울특별시 강남구 테헤란로 400' },
-            { name: '노브랜드버거', cate: '패스트푸드', addr: '서울특별시 강남구 테헤란로 311' },
-            { name: '버거킹', cate: '패스트푸드', addr: '서울특별시 강남구 선릉로 420' },
-            { name: '맥도날드', cate: '패스트푸드', addr: '서울특별시 강남구 테헤란로 300' },
-            { name: '홍콩반점0410', cate: '중식음식점', addr: '서울특별시 강남구 테헤란로 407' },
-            { name: '마라중경', cate: '중식음식점', addr: '서울특별시 강남구 역삼로 80' },
-            { name: '김가네김밥', cate: '분식/김밥', addr: '서울특별시 강남구 논현로 503' },
-            { name: '신전떡볶이', cate: '분식/김밥', addr: '서울특별시 강남구 선릉로 85길' },
-            { name: '카쯔야', cate: '일식음식점/돈가스', addr: '서울특별시 강남구 테헤란로 325' },
-            { name: '사보텐', cate: '일식음식점/돈가스', addr: '서울특별시 강남구 테헤란로 190' },
-            { name: '포메인', cate: '서양식/아시안음식', addr: '서울특별시 강남구 선릉로 428' }
+        const franchisePool = [
+            // 카페·디저트
+            { name: '스타벅스 선릉역점', cate: '커피숍/카페', addr: '서울특별시 강남구 테헤란로 334' },
+            { name: '스타벅스 역삼점', cate: '커피숍/카페', addr: '서울특별시 강남구 테헤란로 152' },
+            { name: '투썸플레이스 선릉공원점', cate: '커피숍/카페', addr: '서울특별시 강남구 선릉로 412' },
+            { name: '메가MGC커피 선릉점', cate: '커피숍/카페', addr: '서울특별시 강남구 역삼로 110' },
+            { name: '컴포즈커피 역삼점', cate: '커피숍/카페', addr: '서울특별시 강남구 논현로 505' },
+            { name: '이디야커피 선릉테헤란점', cate: '커피숍/카페', addr: '서울특별시 강남구 테헤란로 310' },
+            { name: '할리스 역삼역점', cate: '커피숍/카페', addr: '서울특별시 강남구 테헤란로 201' },
+            { name: '빽다방 선릉점', cate: '커피숍/카페', addr: '서울특별시 강남구 선릉로 420' },
+
+            // 한식·육류
+            { name: '하남돼지집 선릉역점', cate: '육류/삼겹살', addr: '서울특별시 강남구 선릉로 93길 24' },
+            { name: '새마을식당 선릉점', cate: '육류/삼겹살', addr: '서울특별시 강남구 테헤란로 220' },
+            { name: '육전식당 강남점', cate: '육류/삼겹살', addr: '서울특별시 강남구 테헤란로 400' },
+            { name: '청년다방 역삼점', cate: '한식/분식', addr: '서울특별시 강남구 역삼로 77' },
+            { name: '본죽&비빔밥 선릉점', cate: '한식', addr: '서울특별시 강남구 테헤란로 320' },
+            { name: '노체부엌 역삼점', cate: '한식/고기', addr: '서울특별시 강남구 논현로 510' },
+
+            // 치킨·피자
+            { name: '교촌치킨 선릉점', cate: '후라이드/양념치킨', addr: '서울특별시 강남구 역삼로 12' },
+            { name: 'BHC치킨 역삼점', cate: '후라이드/양념치킨', addr: '서울특별시 강남구 테헤란로 150' },
+            { name: 'BBQ올리브치킨 선릉점', cate: '후라이드/양념치킨', addr: '서울특별시 강남구 선릉로 90길 10' },
+            { name: '굽네치킨 선릉점', cate: '후라이드/양념치킨', addr: '서울특별시 강남구 테헤란로 330' },
+            { name: '피자알볼로 역삼점', cate: '피자', addr: '서울특별시 강남구 역삼로 95' },
+
+            // 패스트푸드
+            { name: '노브랜드버거 선릉점', cate: '패스트푸드', addr: '서울특별시 강남구 테헤란로 311' },
+            { name: '버거킹 선릉역점', cate: '패스트푸드', addr: '서울특별시 강남구 선릉로 428' },
+            { name: '맥도날드 선릉점', cate: '패스트푸드', addr: '서울특별시 강남구 테헤란로 300' },
+            { name: '맘스터치 역삼점', cate: '패스트푸드', addr: '서울특별시 강남구 논현로 490' },
+            { name: '서브웨이 선릉점', cate: '패스트푸드/샌드위치', addr: '서울특별시 강남구 테헤란로 325' },
+
+            // 중식
+            { name: '홍콩반점0410 선릉점', cate: '중식음식점', addr: '서울특별시 강남구 테헤란로 407' },
+            { name: '마라중경 역삼점', cate: '중식음식점/마라탕', addr: '서울특별시 강남구 역삼로 80' },
+            { name: '천향마라탕 선릉점', cate: '중식음식점', addr: '서울특별시 강남구 선릉로 415' },
+
+            // 분식
+            { name: '김가네김밥 역삼점', cate: '분식/김밥', addr: '서울특별시 강남구 논현로 503' },
+            { name: '신전떡볶이 선릉점', cate: '분식/떡볶이', addr: '서울특별시 강남구 선릉로 85길 12' },
+            { name: '바르다김선생 선릉점', cate: '분식/김밥', addr: '서울특별시 강남구 테헤란로 335' },
+
+            // 일식·돈가스
+            { name: '카쯔야 선릉점', cate: '일식음식점/돈가스', addr: '서울특별시 강남구 테헤란로 325' },
+            { name: '사보텐 역삼점', cate: '일식음식점/돈가스', addr: '서울특별시 강남구 테헤란로 190' },
+            { name: '미소야 선릉점', cate: '일식음식점', addr: '서울특별시 강남구 선릉로 405' },
+
+            // 서양식·아시안
+            { name: '포메인 선릉점', cate: '서양식/아시안음식', addr: '서울특별시 강남구 선릉로 428' },
+            { name: '롤링파스타 역삼점', cate: '서양식/파스타', addr: '서울특별시 강남구 테헤란로 210' },
+            { name: '타코벨 선릉점', cate: '서양식/멕시칸', addr: '서울특별시 강남구 테헤란로 315' }
         ];
 
         const results = [];
         const baseLat = 37.5045;
         const baseLng = 127.0485;
 
-        for (let i = 1; i <= 150; i++) {
-            const template = baseBrands[(i - 1) % baseBrands.length];
-            const branchNo = Math.floor((i - 1) / baseBrands.length) + 1;
-            const storeName = branchNo === 1 ? `${template.name} 선릉점` : `${template.name} 역삼${branchNo}호점`;
+        // 총 180개의 다채로운 브랜드 데이터 생성 (지점 번호와 랜덤 좌표 조합)
+        for (let i = 1; i <= 180; i++) {
+            const template = franchisePool[(i - 1) % franchisePool.length];
+            const duplicateCount = Math.floor((i - 1) / franchisePool.length);
+            
+            let storeName = template.name;
+            if (duplicateCount > 0) {
+                storeName = `${template.name.split(' ')[0]} ${duplicateCount + 2}호점`;
+            }
 
             results.push({
-                bizesId: `BIZ_${i}`,
+                bizesId: `BIZ_FRAN_${i}`,
                 bizesNm: storeName,
                 indsSclsNm: template.cate,
-                rdnmAdr: `${template.addr} ${i % 30 + 1}`,
+                rdnmAdr: `${template.addr} (지상 ${i % 5 + 1}층)`,
                 telno: `02-${Math.floor(Math.random()*800+200)}-${Math.floor(Math.random()*9000+1000)}`,
-                lat: baseLat + (Math.random() - 0.5) * 0.035,
-                lon: baseLng + (Math.random() - 0.5) * 0.045
+                lat: baseLat + (Math.random() - 0.5) * 0.032,
+                lon: baseLng + (Math.random() - 0.5) * 0.042
             });
         }
         return results;
@@ -337,12 +371,12 @@
             else if (category.includes('치킨') || category.includes('피자') || category.includes('호프')) gKey = '2';
             else if (category.includes('일식') || category.includes('돈가스') || category.includes('초밥') || category.includes('스시')) gKey = '3';
             else if (category.includes('중식') || category.includes('짜장') || category.includes('마라탕')) gKey = '4';
-            else if (category.includes('패스트푸드') || category.includes('버거') || category.includes('햄버거')) gKey = '5';
+            else if (category.includes('패스트푸드') || category.includes('버거') || category.includes('샌드위치') || category.includes('햄버거')) gKey = '5';
             else if (category.includes('분식') || category.includes('김밥') || category.includes('떡볶이')) gKey = '6';
-            else if (category.includes('서양식') || category.includes('아시안') || category.includes('파스타')) gKey = '7';
+            else if (category.includes('서양식') || category.includes('아시안') || category.includes('파스타') || category.includes('멕시칸')) gKey = '7';
             else if (category.includes('커피') || category.includes('카페') || category.includes('디저트')) gKey = '8';
 
-            const isHot = name.includes('스타벅스') || name.includes('교촌치킨') || name.includes('하남돼지집') || (index % 5 === 0);
+            const isHot = name.includes('스타벅스') || name.includes('교촌치킨') || name.includes('하남돼지집') || name.includes('버거킹') || (index % 7 === 0);
 
             return {
                 id: item.bizesId,
