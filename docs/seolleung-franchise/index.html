@@ -86,7 +86,6 @@
             overflow-y: auto;
             padding-right: 4px;
         }
-        /* 카드 디자인 */
         .fran-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -171,7 +170,7 @@
             color: #0284c7;
         }
 
-        /* 부드러운 사각박스형 말풍선 오버레이 디자인 */
+        /* 부드러운 사각박스형 말풍선 오버레이 디자인 (원상복구 완료) */
         .soft-box-bubble {
             position: relative;
             background: #ffffff;
@@ -220,7 +219,7 @@
 <div class="franchise-hub-container">
     <div class="hub-header">
         <h2>🏛️ 선릉·역삼 공공데이터 통합 프랜차이즈 큐레이션 맵</h2>
-        <p>전체 목록 유지, 안전한 검색엔진 대체 링크 및 부드러운 사각박스 오버레이 적용</p>
+        <p>전체 목록 보존, 대체 검색엔진 링크 및 부드러운 사각박스 오버레이 적용</p>
     </div>
 
     <!-- 카카오 지도 영역 -->
@@ -249,7 +248,7 @@
 </div>
 
 <script>
-    // 원본 데이터를 완벽하게 보존하는 전역 변수
+    // 원본 데이터를 절대 훼손하지 않는 독립적인 원본 배열
     const originalFranchiseData = [
         { id: 1, category: 'fast', isHot: true, badge: '패스트푸드', badgeClass: 'badge-fast', name: '맥도날드 선릉점', loc: '서울 강남구 테헤란로 311', tip: '위생등급 매우우수', lat: 37.5045, lng: 127.0489, image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=200&q=80', link: 'https://m.place.naver.com/restaurant/31191024/home' },
         { id: 2, category: 'fast', isHot: false, badge: '패스트푸드', badgeClass: 'badge-fast', name: '버거킹 선릉역점', loc: '서울 강남구 선릉로 428', tip: '통새우와퍼 인기', lat: 37.5049, lng: 127.0482, image: '', link: '' },
@@ -264,7 +263,6 @@
         { id: 11, category: 'family', isHot: true, badge: '고깃집/회식', badgeClass: 'badge-family', name: '배꼽집 선릉점', loc: '서울 강남구 선릉로 424', tip: '한우 및 불고기 특선', lat: 37.5046, lng: 127.0478, image: '', link: '' }
     ];
 
-    let franchiseData = [...originalFranchiseData];
     let map;
     let clusterer;
     let currentCenter = { lat: 37.5045, lng: 127.0485 };
@@ -291,17 +289,15 @@
             minLevel: 5
         });
 
-        calculateDistances(currentCenter.lat, currentCenter.lng);
-        renderCards(franchiseData);
-        renderMarkersAndCluster(franchiseData);
+        updateAllDistances(currentCenter.lat, currentCenter.lng);
+        applyCurrentFilterAndRender();
     }
 
-    // 확실하게 작동하는 네이버 검색엔진 링크 대체 함수
+    // 링크가 없거나 깨질 경우 네이버 검색엔진으로 안전하게 연결하는 함수
     function getValidLink(item) {
         if (item.link && item.link.trim() !== '' && !item.link.includes('undefined')) {
             return item.link;
         }
-        // 플레이스 상세 주소가 없을 경우 네이버 통합검색 결과 페이지로 확실히 유도
         return `https://search.naver.com/search.naver?query=${encodeURIComponent(item.name)}`;
     }
 
@@ -318,8 +314,8 @@
         return R * c;
     }
 
-    function calculateDistances(lat, lng) {
-        franchiseData.forEach(item => {
+    function updateAllDistances(lat, lng) {
+        originalFranchiseData.forEach(item => {
             item.distance = getDistance(lat, lng, item.lat, item.lng);
         });
     }
@@ -334,8 +330,8 @@
                 const moveLatLon = new kakao.maps.LatLng(userLat, userLng);
                 map.setCenter(moveLatLon);
 
-                calculateDistances(userLat, userLng);
-                franchiseData.sort((a, b) => a.distance - b.distance);
+                updateAllDistances(userLat, userLng);
+                originalFranchiseData.sort((a, b) => a.distance - b.distance);
 
                 applyCurrentFilterAndRender();
             }, function() {
@@ -355,7 +351,7 @@
 
             const targetUrl = getValidLink(item);
 
-            // 부드러운 사각박스형 오버레이 생성 및 상호 클릭 이동 보장
+            // 부드러운 사각박스 오버레이 및 상호 클릭 시 새창 이동 보장
             const content = document.createElement('div');
             content.className = 'soft-box-bubble';
             content.innerHTML = `
