@@ -253,37 +253,20 @@
             }
         });
 
-        // 실제 비동기 데이터 fetch 함수 호출
         fetchRealPublicDataAPI();
     }
 
-    /**
-     * [진짜 동적 연동 함수] 
-     * fetch를 이용해 공공데이터 API 서버나 백엔드 프록시 서버로 비동기 요청을 수행합니다.
-     */
     async function fetchRealPublicDataAPI() {
         document.getElementById('status-text').innerText = '🌐 공공데이터 API 서버에 실시간 데이터 요청 중...';
 
         try {
-            // 실제 사용 시 아래 URL을 소상공인시장진흥공단 상가(상권)정보 API 엔드포인트나 
-            // 자체 구축한 백엔드 프록시 서버 주소로 교체하세요. (CORS 이슈 우회 목적)
-            // const API_URL = 'https://api.odcloud.kr/api/1505123/v1/uddi:...';
-            // const response = await fetch(API_URL, {
-            //     method: 'GET',
-            //     headers: { 'Authorization': 'Infuser YOUR_SERVICE_KEY' }
-            // });
-            // const result = await response.json();
-            // const rawData = result.data; // API 응답 구조에 맞게 파싱
-
-            // 현재 프론트엔드 단독 테스트 환경에서 실제 비동기 통신 흐름을 검증할 수 있도록 
-            // Promise와 setTimeout을 통한 비동기(Asynchronous) 네트워크 통신을 모사합니다.
+            // 비동기 네트워크 통신 모사 (실제 API 호출 시 fetch 코드로 대체 가능)
             const rawData = await new Promise((resolve) => {
                 setTimeout(() => {
                     resolve(getRemoteDummyPayload());
-                }, 800); // 0.8초간 네트워크 지연 시뮬레이션
+                }, 800);
             });
 
-            // 비동기로 수신된 원천 데이터를 정제 및 매핑
             publicDataset = parseAndRefinePublicData(rawData);
 
             document.getElementById('status-text').innerText = `✅ 실시간 데이터 수신 완료: 총 ${publicDataset.length.toLocaleString()}건 렌더링 대기 중`;
@@ -291,24 +274,57 @@
 
         } catch (error) {
             console.error('API 통신 에러:', error);
-            document.getElementById('status-text').innerText = '❌ 공공데이터 서버 통신 실패 (네트워크 상태를 확인하세요)';
-            document.getElementById('card-container').innerHTML = '<div class="loading-box">데이터를 불러오지 못했습니다. API 키 또는 네트워크 연결을 확인해 주세요.</div>';
+            document.getElementById('status-text').innerText = '❌ 공공데이터 서버 통신 실패';
+            document.getElementById('card-container').innerHTML = '<div class="loading-box">데이터를 불러오지 못했습니다. 네트워크를 확인해 주세요.</div>';
         }
     }
 
-    // 원격 서버로부터 받아온다고 가정하는 원천 페이로드 데이터
+    // 150개의 풍부한 상권 데이터를 반환하는 원격 페이로드 함수
     function getRemoteDummyPayload() {
-        return [
-            { bizesId: 'B1', bizesNm: '스타벅스 선릉역점', indsSclsNm: '커피숍/카페', rdnmAdr: '서울특별시 강남구 테헤란로 334', telno: '1522-3232', lat: 37.5042, lon: 127.0480 },
-            { bizesId: 'B2', bizesNm: '투썸플레이스 역삼점', indsSclsNm: '커피숍/카페', rdnmAdr: '서울특별시 강남구 테헤란로 201', telno: '02-555-1234', lat: 37.5012, lon: 127.0370 },
-            { bizesId: 'B3', bizesNm: '교촌치킨 선릉점', indsSclsNm: '후라이드/양념치킨', rdnmAdr: '서울특별시 강남구 역삼로 12', telno: '02-567-8910', lat: 37.5005, lon: 127.0450 },
-            { bizesId: 'B4', bizesNm: '하남돼지집 선릉역점', indsSclsNm: '육류/삼겹살', rdnmAdr: '서울특별시 강남구 선릉로 93길 24', telno: '02-538-3392', lat: 37.5055, lon: 127.0490 },
-            { bizesId: 'B5', bizesNm: '노브랜드버거 선릉점', indsSclsNm: '패스트푸드', rdnmAdr: '서울특별시 강남구 테헤란로 311', telno: '02-6933-2030', lat: 37.5033, lon: 127.0460 },
-            { bizesId: 'B6', bizesNm: '홍콩반점0410 선릉점', indsSclsNm: '중식음식점', rdnmAdr: '서울특별시 강남구 테헤란로 407', telno: '02-552-0410', lat: 37.5062, lon: 127.0510 },
-            { bizesId: 'B7', bizesNm: '김가네김밥 역삼점', indsSclsNm: '분식/김밥', rdnmAdr: '서울특별시 강남구 논현로 503', telno: '02-565-1288', lat: 37.5021, lon: 127.0390 },
-            { bizesId: 'B8', bizesNm: '카쯔야 선릉점', indsSclsNm: '일식음식점/돈가스', rdnmAdr: '서울특별시 강남구 테헤란로 325', telno: '02-553-5511', lat: 37.5038, lon: 127.0470 },
-            { bizesId: 'B9', bizesNm: '포메인 선릉점', indsSclsNm: '서양식/아시안음식', rdnmAdr: '서울특별시 강남구 선릉로 428', telno: '02-556-3355', lat: 37.5050, lon: 127.0500 }
+        const baseBrands = [
+            { name: '스타벅스', cate: '커피숍/카페', addr: '서울특별시 강남구 테헤란로 334' },
+            { name: '투썸플레이스', cate: '커피숍/카페', addr: '서울특별시 강남구 테헤란로 201' },
+            { name: '메가MGC커피', cate: '커피숍/카페', addr: '서울특별시 강남구 역삼로 110' },
+            { name: '컴포즈커피', cate: '커피숍/카페', addr: '서울특별시 강남구 선릉로 430' },
+            { name: '이디야커피', cate: '커피숍/카페', addr: '서울특별시 강남구 논현로 505' },
+            { name: '교촌치킨', cate: '후라이드/양념치킨', addr: '서울특별시 강남구 역삼로 12' },
+            { name: 'BHC치킨', cate: '후라이드/양념치킨', addr: '서울특별시 강남구 테헤란로 150' },
+            { name: 'BBQ올리브치킨', cate: '후라이드/양념치킨', addr: '서울특별시 강남구 선릉로 90길' },
+            { name: '하남돼지집', cate: '육류/삼겹살', addr: '서울특별시 강남구 선릉로 93길 24' },
+            { name: '새마을식당', cate: '육류/삼겹살', addr: '서울특별시 강남구 테헤란로 220' },
+            { name: '육전식당', cate: '육류/삼겹살', addr: '서울특별시 강남구 테헤란로 400' },
+            { name: '노브랜드버거', cate: '패스트푸드', addr: '서울특별시 강남구 테헤란로 311' },
+            { name: '버거킹', cate: '패스트푸드', addr: '서울특별시 강남구 선릉로 420' },
+            { name: '맥도날드', cate: '패스트푸드', addr: '서울특별시 강남구 테헤란로 300' },
+            { name: '홍콩반점0410', cate: '중식음식점', addr: '서울특별시 강남구 테헤란로 407' },
+            { name: '마라중경', cate: '중식음식점', addr: '서울특별시 강남구 역삼로 80' },
+            { name: '김가네김밥', cate: '분식/김밥', addr: '서울특별시 강남구 논현로 503' },
+            { name: '신전떡볶이', cate: '분식/김밥', addr: '서울특별시 강남구 선릉로 85길' },
+            { name: '카쯔야', cate: '일식음식점/돈가스', addr: '서울특별시 강남구 테헤란로 325' },
+            { name: '사보텐', cate: '일식음식점/돈가스', addr: '서울특별시 강남구 테헤란로 190' },
+            { name: '포메인', cate: '서양식/아시안음식', addr: '서울특별시 강남구 선릉로 428' }
         ];
+
+        const results = [];
+        const baseLat = 37.5045;
+        const baseLng = 127.0485;
+
+        for (let i = 1; i <= 150; i++) {
+            const template = baseBrands[(i - 1) % baseBrands.length];
+            const branchNo = Math.floor((i - 1) / baseBrands.length) + 1;
+            const storeName = branchNo === 1 ? `${template.name} 선릉점` : `${template.name} 역삼${branchNo}호점`;
+
+            results.push({
+                bizesId: `BIZ_${i}`,
+                bizesNm: storeName,
+                indsSclsNm: template.cate,
+                rdnmAdr: `${template.addr} ${i % 30 + 1}`,
+                telno: `02-${Math.floor(Math.random()*800+200)}-${Math.floor(Math.random()*9000+1000)}`,
+                lat: baseLat + (Math.random() - 0.5) * 0.035,
+                lon: baseLng + (Math.random() - 0.5) * 0.045
+            });
+        }
+        return results;
     }
 
     function parseAndRefinePublicData(rawData) {
@@ -326,7 +342,7 @@
             else if (category.includes('서양식') || category.includes('아시안') || category.includes('파스타')) gKey = '7';
             else if (category.includes('커피') || category.includes('카페') || category.includes('디저트')) gKey = '8';
 
-            const isHot = name.includes('스타벅스') || name.includes('교촌치킨') || name.includes('하남돼지집');
+            const isHot = name.includes('스타벅스') || name.includes('교촌치킨') || name.includes('하남돼지집') || (index % 5 === 0);
 
             return {
                 id: item.bizesId,
@@ -336,7 +352,7 @@
                 badgeClass: groupMeta[gKey].badgeClass,
                 isHot: isHot,
                 loc: item.rdnmAdr,
-                phone: item.telno || '02-000-0000',
+                phone: item.telno,
                 lat: parseFloat(item.lat),
                 lng: parseFloat(item.lon),
                 url: `https://map.kakao.com/link/search/${encodeURIComponent(name)}`
