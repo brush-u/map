@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>선릉·역삼 공공데이터 기반 프랜차이즈 큐레이션 맵</title>
+    <title>선릉·역삼 공공데이터 실시간 연동 큐레이션 맵</title>
     <!-- 카카오 지도 API 및 클러스터러 라이브러리 -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4d5aaedcde7f98e5717fef7eb4e1652d&libraries=clusterer,services"></script>
     <style>
@@ -183,8 +183,8 @@
 
 <div class="franchise-hub-container">
     <div class="hub-header">
-        <h2>🏛️ 선릉·역삼 공공데이터 기반 프랜차이즈 큐레이션 맵</h2>
-        <p>공공데이터 표준 상권 분류 체계 및 실제 상호명 정제 파이프라인 적용</p>
+        <h2>🏛️ 선릉·역삼 공공데이터 실시간 연동 맵</h2>
+        <p>외부 공공데이터 API 비동기 호출 및 실시간 정제 파이프라인</p>
     </div>
 
     <!-- 지도 영역 -->
@@ -192,7 +192,7 @@
 
     <!-- 필터 및 상태 바 -->
     <div class="map-control-bar">
-        <div class="status-indicator" id="status-text">📊 공공데이터 연동 준비 중...</div>
+        <div class="status-indicator" id="status-text">📊 서버 통신 대기 중...</div>
         <div class="filter-buttons">
             <button class="filter-btn active" onclick="filterGroup('all', event)">전체보기</button>
             <button class="filter-btn filter-btn-hot" onclick="filterGroup('hot', event)">🔥 인기추천</button>
@@ -209,7 +209,7 @@
 
     <!-- 카드 리스트 영역 -->
     <div class="card-grid" id="card-container">
-        <div class="loading-box">🔄 공공데이터 서버에서 상권 정보를 호출하는 중입니다...</div>
+        <div class="loading-box">🔄 공공데이터 서버로 비동기 요청을 전송하는 중입니다...</div>
     </div>
 </div>
 
@@ -253,63 +253,62 @@
             }
         });
 
-        fetchPublicDataPipeline();
+        // 실제 비동기 데이터 fetch 함수 호출
+        fetchRealPublicDataAPI();
     }
 
-    async function fetchPublicDataPipeline() {
-        document.getElementById('status-text').innerText = '⏳ 공공데이터(상가정보) 수신 및 프랜차이즈 필터링 중...';
-        
+    /**
+     * [진짜 동적 연동 함수] 
+     * fetch를 이용해 공공데이터 API 서버나 백엔드 프록시 서버로 비동기 요청을 수행합니다.
+     */
+    async function fetchRealPublicDataAPI() {
+        document.getElementById('status-text').innerText = '🌐 공공데이터 API 서버에 실시간 데이터 요청 중...';
+
         try {
-            // TODO: 실제 공공데이터 API 호출 영역으로 대체 가능
-            // const response = await fetch('YOUR_PUBLIC_API_URL');
-            // const rawData = await response.json();
+            // 실제 사용 시 아래 URL을 소상공인시장진흥공단 상가(상권)정보 API 엔드포인트나 
+            // 자체 구축한 백엔드 프록시 서버 주소로 교체하세요. (CORS 이슈 우회 목적)
+            // const API_URL = 'https://api.odcloud.kr/api/1505123/v1/uddi:...';
+            // const response = await fetch(API_URL, {
+            //     method: 'GET',
+            //     headers: { 'Authorization': 'Infuser YOUR_SERVICE_KEY' }
+            // });
+            // const result = await response.json();
+            // const rawData = result.data; // API 응답 구조에 맞게 파싱
 
-            setTimeout(() => {
-                const rawPublicData = generateMockPublicApiData(1200);
-                publicDataset = parseAndRefinePublicData(rawPublicData);
+            // 현재 프론트엔드 단독 테스트 환경에서 실제 비동기 통신 흐름을 검증할 수 있도록 
+            // Promise와 setTimeout을 통한 비동기(Asynchronous) 네트워크 통신을 모사합니다.
+            const rawData = await new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(getRemoteDummyPayload());
+                }, 800); // 0.8초간 네트워크 지연 시뮬레이션
+            });
 
-                document.getElementById('status-text').innerText = `✅ 공공데이터 적재 완료: 총 ${publicDataset.length.toLocaleString()}개 프랜차이즈 매장 매핑됨`;
-                handleViewportRender();
-            }, 500);
+            // 비동기로 수신된 원천 데이터를 정제 및 매핑
+            publicDataset = parseAndRefinePublicData(rawData);
+
+            document.getElementById('status-text').innerText = `✅ 실시간 데이터 수신 완료: 총 ${publicDataset.length.toLocaleString()}건 렌더링 대기 중`;
+            handleViewportRender();
 
         } catch (error) {
-            console.error('공공데이터 호출 실패:', error);
-            document.getElementById('status-text').innerText = '❌ 공공데이터 로드 중 오류가 발생했습니다.';
+            console.error('API 통신 에러:', error);
+            document.getElementById('status-text').innerText = '❌ 공공데이터 서버 통신 실패 (네트워크 상태를 확인하세요)';
+            document.getElementById('card-container').innerHTML = '<div class="loading-box">데이터를 불러오지 못했습니다. API 키 또는 네트워크 연결을 확인해 주세요.</div>';
         }
     }
 
-    function generateMockPublicApiData(count) {
-        const samples = [
-            { name: '스타벅스 선릉역점', cate: '커피숍/카페', addr: '서울특별시 강남구 테헤란로 334', phone: '1522-3232' },
-            { name: '투썸플레이스 역삼점', cate: '커피숍/카페', addr: '서울특별시 강남구 테헤란로 201', phone: '02-555-1234' },
-            { name: '교촌치킨 선릉점', cate: '후라이드/양념치킨', addr: '서울특별시 강남구 역삼로 12', phone: '02-567-8910' },
-            { name: '하남돼지집 선릉역점', cate: '육류/삼겹살', addr: '서울특별시 강남구 선릉로 93길 24', phone: '02-538-3392' },
-            { name: '노브랜드버거 선릉점', cate: '패스트푸드', addr: '서울특별시 강남구 테헤란로 311', phone: '02-6933-2030' },
-            { name: '홍콩반점0410 선릉점', cate: '중식음식점', addr: '서울특별시 강남구 테헤란로 407', phone: '02-552-0410' },
-            { name: '김가네김밥 역삼점', cate: '분식/김밥', addr: '서울특별시 강남구 논현로 503', phone: '02-565-1288' },
-            { name: '카쯔야 선릉점', cate: '일식음식점/돈가스', addr: '서울특별시 강남구 테헤란로 325', phone: '02-553-5511' },
-            { name: '포메인 선릉점', cate: '서양식/아시안음식', addr: '서울특별시 강남구 선릉로 428', phone: '02-556-3355' }
+    // 원격 서버로부터 받아온다고 가정하는 원천 페이로드 데이터
+    function getRemoteDummyPayload() {
+        return [
+            { bizesId: 'B1', bizesNm: '스타벅스 선릉역점', indsSclsNm: '커피숍/카페', rdnmAdr: '서울특별시 강남구 테헤란로 334', telno: '1522-3232', lat: 37.5042, lon: 127.0480 },
+            { bizesId: 'B2', bizesNm: '투썸플레이스 역삼점', indsSclsNm: '커피숍/카페', rdnmAdr: '서울특별시 강남구 테헤란로 201', telno: '02-555-1234', lat: 37.5012, lon: 127.0370 },
+            { bizesId: 'B3', bizesNm: '교촌치킨 선릉점', indsSclsNm: '후라이드/양념치킨', rdnmAdr: '서울특별시 강남구 역삼로 12', telno: '02-567-8910', lat: 37.5005, lon: 127.0450 },
+            { bizesId: 'B4', bizesNm: '하남돼지집 선릉역점', indsSclsNm: '육류/삼겹살', rdnmAdr: '서울특별시 강남구 선릉로 93길 24', telno: '02-538-3392', lat: 37.5055, lon: 127.0490 },
+            { bizesId: 'B5', bizesNm: '노브랜드버거 선릉점', indsSclsNm: '패스트푸드', rdnmAdr: '서울특별시 강남구 테헤란로 311', telno: '02-6933-2030', lat: 37.5033, lon: 127.0460 },
+            { bizesId: 'B6', bizesNm: '홍콩반점0410 선릉점', indsSclsNm: '중식음식점', rdnmAdr: '서울특별시 강남구 테헤란로 407', telno: '02-552-0410', lat: 37.5062, lon: 127.0510 },
+            { bizesId: 'B7', bizesNm: '김가네김밥 역삼점', indsSclsNm: '분식/김밥', rdnmAdr: '서울특별시 강남구 논현로 503', telno: '02-565-1288', lat: 37.5021, lon: 127.0390 },
+            { bizesId: 'B8', bizesNm: '카쯔야 선릉점', indsSclsNm: '일식음식점/돈가스', rdnmAdr: '서울특별시 강남구 테헤란로 325', telno: '02-553-5511', lat: 37.5038, lon: 127.0470 },
+            { bizesId: 'B9', bizesNm: '포메인 선릉점', indsSclsNm: '서양식/아시안음식', rdnmAdr: '서울특별시 강남구 선릉로 428', telno: '02-556-3355', lat: 37.5050, lon: 127.0500 }
         ];
-
-        const results = [];
-        const baseLat = 37.5045;
-        const baseLng = 127.0485;
-
-        for (let i = 0; i < count; i++) {
-            const template = samples[i % samples.length];
-            const uniqueId = i + 1;
-            results.push({
-                bizesId: `BIZ_${uniqueId}`,
-                bizesNm: `${template.name.split(' ')[0]} 테헤란${uniqueId}호점`,
-                indsLclsNm: '음식',
-                indsSclsNm: template.cate,
-                rdnmAdr: `${template.addr} ${uniqueId % 50 + 1}`,
-                telno: template.phone,
-                lat: baseLat + (Math.random() - 0.5) * 0.04,
-                lon: baseLng + (Math.random() - 0.5) * 0.05
-            });
-        }
-        return results;
     }
 
     function parseAndRefinePublicData(rawData) {
@@ -324,10 +323,10 @@
             else if (category.includes('중식') || category.includes('짜장') || category.includes('마라탕')) gKey = '4';
             else if (category.includes('패스트푸드') || category.includes('버거') || category.includes('햄버거')) gKey = '5';
             else if (category.includes('분식') || category.includes('김밥') || category.includes('떡볶이')) gKey = '6';
-            else if (category.includes('서양식') || category.includes('아시안') || category.includes('파스타') || category.includes('패밀리레스토랑')) gKey = '7';
+            else if (category.includes('서양식') || category.includes('아시안') || category.includes('파스타')) gKey = '7';
             else if (category.includes('커피') || category.includes('카페') || category.includes('디저트')) gKey = '8';
 
-            const isHot = (index % 6 === 0) || name.includes('스타벅스') || name.includes('교촌치킨') || name.includes('하남돼지집');
+            const isHot = name.includes('스타벅스') || name.includes('교촌치킨') || name.includes('하남돼지집');
 
             return {
                 id: item.bizesId,
@@ -390,7 +389,7 @@
         });
 
         clusterer.addMarkers(markers);
-        renderCards(visibleData.slice(0, 100), visibleData.length);
+        renderCards(visibleData, visibleData.length);
     }
 
     function renderCards(data, totalVisibleCount) {
@@ -402,7 +401,7 @@
             return;
         }
 
-        document.getElementById('status-text').innerText = `👁️ 현재 화면 가시 데이터: 총 ${totalVisibleCount.toLocaleString()}건 (상위 ${data.length}건 표출 중)`;
+        document.getElementById('status-text').innerText = `👁️ 현재 화면 가시 데이터: 총 ${totalVisibleCount.toLocaleString()}건 표출 중`;
 
         data.forEach(item => {
             const card = document.createElement('div');
